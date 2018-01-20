@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!-- File description
+  This is intended to launch the robot driver together with a ros_controller and a URDF model
+ -->
+<launch>
+  <arg name="pcan_device" default="auto" />
+  <arg name="trajectory_controller_name" default="pos_based_pos_traj_controller_arm" />
+
+  <include file="$(find schunk_canopen_driver)/launch/driver.launch">
+    <arg name="pcan_device" value="$(arg pcan_device)" />
+    <arg name="with_ros_control" value="True" />
+    <arg name="do_autostart" value="True" />
+    <arg name="trajectory_controller_name" value="$(arg trajectory_controller_name)" />
+<!--     <arg name="debug" value="true" /> -->
+  </include>
+
+  <!-- robot model -->
+  <param name="robot_description" command="rosrun xacro xacro --inorder '$(find schunk_canopen_driver)/urdf/lwa4p/arm.urdf.xacro'" />
+
+  <!-- ROS-Control system bringup -->
+  <include file="$(find schunk_canopen_driver)/launch/ros_control.launch">
+      <arg name="trajectory_controller_name" value="$(arg trajectory_controller_name)" />
+  </include>
+
+  <!--   Convert joint states to /tf tranforms -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+
+
+</launch>

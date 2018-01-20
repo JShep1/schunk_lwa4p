@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!-- File description
+  For executing more complex trajectories the interpolated position mode with
+  ros_control offers a very powerful, yet effective command interface.
+  It offers a FollowJointTrajectory interface as well as multiple services
+  for handling the robot.
+ -->
+<launch>
+
+  <!-- Trajectory controller should be set by the driver launch file -->
+  <arg name="trajectory_controller_name" />
+
+  <!-- Load controller settings -->
+  <rosparam file="$(find schunk_canopen_driver)/config/arm_controllers.yaml" command="load"/>
+
+  <!-- spawn controller manager -->
+  <node name="ros_control_controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
+    output="screen" args="$(arg trajectory_controller_name)" />
+
+</launch>
