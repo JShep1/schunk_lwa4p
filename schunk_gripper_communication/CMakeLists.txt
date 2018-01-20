@@ -25,6 +25,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
   control_msgs
   controller_manager
+  moveit_ros_planning_interface
   hardware_interface
   message_generation
   roscpp

@@ -3,6 +3,9 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "schunk_gripper_communication/schunk_gripper.h"
+#include "moveit/move_group_interface/move_group.h"
+#include "moveit/planning_scene_interface/planning_scene_interface.h"
+//#include <planning_scene_interface.h>
 
 bool set_motor(double motorvalue)
 {
@@ -27,7 +30,14 @@ bool set_motor(double motorvalue)
 
 bool plan_motion(){
     ROS_INFO("Motion planning in progress.");
-    ROS_INFO("Motion planning complete.");
+    moveit::planning_interface::MoveGroup group("Arm");
+    moveit::planning_interface::PlanningSceneInterface planning_scene_interface;    
+    //ros::Publisher display_publisher = node_handle.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path",1,true);
+    
+    
+    ROS_INFO("Reference frame: %s.", group.getPlanningFrame().c_str());
+    ROS_INFO("EE link: %s.", group.getEndEffectorLink().c_str());
+    
     return true;
 }
 

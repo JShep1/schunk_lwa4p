@@ -1,0 +1,14 @@
+<launch>
+  <rosparam command="load" file="$(find schunk_gripper_communication)/config/kinematics.yaml"/>
+  <include file="$(find schunk_gripper_communication)/launch/planning_context.launch">
+    <arg name="load_robot_description" value="true"/>
+  </include>
+   <include file="$(find schunk_gripper_communication)/launch/move_group.launch">
+    <arg name="allow_trajectory_execution" value="true"/>
+  </include>
+  <!-- The following allows move it to plan for longer without Aborting the trajectory -->
+  <param name="move_group/trajectory_execution/allowed_execution_duration_scaling" value="4.0" />
+  <param name="move_group/trajectory_execution/execution_duration_monitoring" value="false" />
+  <node name="schunk_gripper_server" pkg="schunk_gripper_communication" type="schunk_gripper_server" />
+</launch>
+

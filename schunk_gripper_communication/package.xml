@@ -17,13 +17,6 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   
-  <depend>move_ros_move_group</depend>
-  <depend>moveit_kinematics</depend>
-  <depend>moveit_planners_ompl</depend>
-  <depend>moveit_ros_visualization</depend>
-  <depend>joint_state_publisher</depend>
-  <depend>schunk_lwa4p</depend>
-
   <depend>actionlib</depend>
   <depend>control_msgs</depend>
   <depend>controller_manager</depend>
@@ -31,17 +24,24 @@
   <depend>fzi_icl_core</depend>
   <depend>hardware_interface</depend>
   <depend>joint_limits_interface</depend>
+  <depend>joint_state_publisher</depend>
+  <depend>message_generation</depend>
   <depend>message_runtime</depend>
+  <depend>move_ros_move_group</depend>
+  <depend>moveit_kinematics</depend>
+  <depend>moveit_planners_ompl</depend>
+  <depend>moveit_ros_visualization</depend>
+  <depend>moveit_ros_planning_interface</depend>
   <depend>robot_state_publisher</depend>
   <depend>roscpp</depend>
+  <depend>rospy</depend>
   <depend>ros_controllers</depend>
+  <depend>schunk_lwa4p</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <depend>urdf</depend>
   <depend>xacro</depend>
-  <depend>message_generation</depend>
-  <depend>rospy</depend>
 
   <!--
   <build_export_depend>roscpp</build_export_depend>
