@@ -24,8 +24,7 @@
   </include>
 
   <!-- If needed, broadcast static tf for robot root -->
-    <node pkg="tf" type="static_transform_publisher" name="virtual_joint_broadcaster_0" args="0 0 0 0 0 0 odom_combined arm_base_link 100" />
-
+  
 
   <!-- We do not have a robot connected, so publish fake joint states -->
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
@@ -44,12 +43,12 @@
     <arg name="debug" value="$(arg debug)"/>
   </include>
 
-  <!-- Run Rviz and load the default config to see the state of the move_group node -->
+  <!-- Run Rviz and load the default config to see the state of the move_group node 
   <include file="$(find schunk_gripper_communication)/launch/moveit_rviz.launch">
     <arg name="config" value="true"/>
     <arg name="debug" value="$(arg debug)"/>
   </include>
-
+-->
   <!-- If database loading was enabled, start mongodb as well -->
   <include file="$(find schunk_gripper_communication)/launch/default_warehouse_db.launch" if="$(arg db)">
     <arg name="moveit_warehouse_database_path" value="$(arg db_path)"/>

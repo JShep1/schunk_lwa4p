@@ -9,7 +9,7 @@
   </link>
 
   <!-- load the actuall LWA4p -->
-  <xacro:include filename="$(find schunk_canopen_driver)/urdf/lwa4p/lwa4p.urdf.xacro" />
+  <xacro:include filename="$(find schunk_gripper_communication)/urdf/lwa4p/lwa4p.urdf.xacro" />
 
   <!-- instantiate with a base link to attach it to -->
   <xacro:schunk_lwa4p parent="base_link" name="arm">
