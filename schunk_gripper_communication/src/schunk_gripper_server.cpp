@@ -11,6 +11,7 @@
 #include <moveit/robot_model/joint_model.h>
 //#include <moveit/robot_state/joint_state_group.h>
 #include <moveit/robot_state/robot_state.h>
+#include <eigen_conversions/eigen_msg.h>
 
 //#include <planning_scene_interface.h>
 
@@ -54,20 +55,16 @@ bool plan_motion(){
     ROS_INFO("Reference frame: %s.", group.getPlanningFrame().c_str());
     ROS_INFO("EE link: %s.", group.getEndEffectorLink().c_str());
 /* 
-    geometry_msgs::Pose target_pose1;
-    target_pose1.orientation.w = 1.0;
-    target_pose1.position.x = 0.58;
-    target_pose1.position.y = -0.7;
-    target_pose1.position.z = 1.0;
-    group.setPoseTarget(target_pose1);
 */
     
     //get current state of joints and modify one for easy motion plan testing
+
+/*
     std::vector<double> group_variable_values;
     group.getCurrentState()->copyJointGroupPositions(group.getCurrentState()->getRobotModel()->getJointModelGroup(group.getName()), group_variable_values);
     group_variable_values[0] = -1.0;
     group.setJointValueTarget(group_variable_values);
-  
+*/ 
     //load the robot model 
     robot_model_loader::RobotModelLoader robot_model_loader("robot_description");
     robot_model::RobotModelPtr kinematic_model = robot_model_loader.getModel();
@@ -115,7 +112,19 @@ bool plan_motion(){
     }
 
     //instantiate a motion plan and plan for it with the Arm group
+    geometry_msgs::Pose target_pose1;
+    /*
+    target_pose1.orientation.w = 1.0;
+    target_pose1.position.x = 0.58;
+    target_pose1.position.y = -0.7;
+    target_pose1.position.z = 1.0;
+    */
+    
+
+    tf::poseEigenToMsg(end_effector_state, target_pose1);
+
     moveit::planning_interface::MoveGroup::Plan my_plan;
+    group.setPoseTarget(target_pose1);
     bool success = group.plan(my_plan);
     sleep(5.0);
     if(1){
@@ -126,7 +135,14 @@ bool plan_motion(){
         display_publisher.publish(display_trajectory);
         sleep(5.0);
     }
+    if(0){
+        group.move();
+    }
+    return true;
+}
 
+bool execute_motion(){
+    //group.move();
     return true;
 }
 
@@ -136,6 +152,7 @@ bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
     res.motorvalue = req.motorvalue;
     std::string function_1 = "set_motor";
     std::string function_2 = "plan_motion";
+    std::string function_3 = "execute_motion";
     if(!function_1.compare((std::string)req.function_name)){
         ROS_INFO("Found function set_motor");
         if(set_motor(res.motorvalue)){
@@ -155,7 +172,18 @@ bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
             return false;
         }
         
+    } else if(!function_3.compare((std::string)req.function_name)){
+        ROS_INFO("Found function execute_motion");
+        if(execute_motion()){
+            ROS_INFO("Successfully executed motion.");
+            return true;
+        }else{
+            ROS_ERROR("Could not execute motion. Returning.");
+            return false;
+        }
+        
     }
+
     else{
         //std::stringstream ss;
         //ss << (std::string)req.function_name;
