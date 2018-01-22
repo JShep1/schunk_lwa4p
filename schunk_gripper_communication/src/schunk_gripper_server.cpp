@@ -37,14 +37,20 @@ bool set_motor(double motorvalue)
 
 bool plan_motion(){
     ROS_INFO("Motion planning in progress.");
+    //declare the movegroup to be planned for
     moveit::planning_interface::MoveGroup group("Arm");
-    moveit::planning_interface::PlanningSceneInterface planning_scene_interface;    ros::NodeHandle node_handle;
+    moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
+    ros::NodeHandle node_handle;
+
+    //start thread
     ros::AsyncSpinner spinner(1);
     spinner.start();
+    
+    //display publisher for visualizing motion plan
     moveit_msgs::DisplayTrajectory display_trajectory;
     ros::Publisher display_publisher = node_handle.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path",1,true);
     
-    
+    //Output info to make sure everything's loaded and good
     ROS_INFO("Reference frame: %s.", group.getPlanningFrame().c_str());
     ROS_INFO("EE link: %s.", group.getEndEffectorLink().c_str());
 /* 
@@ -55,20 +61,28 @@ bool plan_motion(){
     target_pose1.position.z = 1.0;
     group.setPoseTarget(target_pose1);
 */
+    
+    //get current state of joints and modify one for easy motion plan testing
     std::vector<double> group_variable_values;
     group.getCurrentState()->copyJointGroupPositions(group.getCurrentState()->getRobotModel()->getJointModelGroup(group.getName()), group_variable_values);
     group_variable_values[0] = -1.0;
     group.setJointValueTarget(group_variable_values);
-   
+  
+    //load the robot model 
     robot_model_loader::RobotModelLoader robot_model_loader("robot_description");
     robot_model::RobotModelPtr kinematic_model = robot_model_loader.getModel();
+
+    //print out the frame of the robot model to test
     ROS_INFO("Model frame: %s", kinematic_model->getModelFrame().c_str());
 
+    //get the joint model group which represents the robot model for 
+    //the Arm group
     robot_state::RobotStatePtr kinematic_state(new robot_state::RobotState(kinematic_model));
     kinematic_state->setToDefaultValues();
     const robot_state::JointModelGroup* joint_model_group = kinematic_model->getJointModelGroup("Arm");
     const std::vector<std::string> &joint_names = joint_model_group->getJointModelNames();
 
+    //print out the joint values for testing
     std::vector<double> joint_values;
     kinematic_state->copyJointGroupPositions(joint_model_group, joint_values);
     for(std::size_t i = 0; i < joint_names.size(); i++){
@@ -78,13 +92,16 @@ bool plan_motion(){
     //enforce the joint limits for the currentstate
     kinematic_state->enforceBounds();
 
-
+    //set the kinematic state to random to test forward kinematics
+    //fk: random pose of arm -> eef pose
     kinematic_state->setToRandomPositions(joint_model_group);
     const Eigen::Affine3d &end_effector_state = kinematic_state->getGlobalLinkTransform("arm_6_link");
     ROS_INFO_STREAM("Translation: " << end_effector_state.translation());
     ROS_INFO_STREAM("Rotation: " << end_effector_state.rotation());
 
 
+    //find the inverse kinematics
+    //ik: random pose of eef -> pose of arm
     bool found_ik = kinematic_state->setFromIK(joint_model_group, end_effector_state, 10, 0.1);
     if(found_ik){
         kinematic_state->copyJointGroupPositions(joint_model_group, joint_values);
@@ -97,12 +114,12 @@ bool plan_motion(){
     
     }
 
-
+    //instantiate a motion plan and plan for it with the Arm group
     moveit::planning_interface::MoveGroup::Plan my_plan;
     bool success = group.plan(my_plan);
     sleep(5.0);
     if(1){
-
+        //visualize the created motion plan
         ROS_INFO("Visualizing plan 1 (pose goal) %s",success?"":"FAILED");
         display_trajectory.trajectory_start = my_plan.start_state_;
         display_trajectory.trajectory.push_back(my_plan.trajectory_);
