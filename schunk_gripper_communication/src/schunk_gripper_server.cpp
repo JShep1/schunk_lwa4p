@@ -6,6 +6,12 @@
 #include "schunk_gripper_communication/schunk_gripper.h"
 #include "moveit/move_group_interface/move_group.h"
 #include "moveit/planning_scene_interface/planning_scene_interface.h"
+#include <moveit/robot_model_loader/robot_model_loader.h>
+#include <moveit/robot_model/robot_model.h>
+#include <moveit/robot_model/joint_model.h>
+//#include <moveit/robot_state/joint_state_group.h>
+#include <moveit/robot_state/robot_state.h>
+
 //#include <planning_scene_interface.h>
 
 bool set_motor(double motorvalue)
@@ -54,6 +60,43 @@ bool plan_motion(){
     group_variable_values[0] = -1.0;
     group.setJointValueTarget(group_variable_values);
    
+    robot_model_loader::RobotModelLoader robot_model_loader("robot_description");
+    robot_model::RobotModelPtr kinematic_model = robot_model_loader.getModel();
+    ROS_INFO("Model frame: %s", kinematic_model->getModelFrame().c_str());
+
+    robot_state::RobotStatePtr kinematic_state(new robot_state::RobotState(kinematic_model));
+    kinematic_state->setToDefaultValues();
+    const robot_state::JointModelGroup* joint_model_group = kinematic_model->getJointModelGroup("Arm");
+    const std::vector<std::string> &joint_names = joint_model_group->getJointModelNames();
+
+    std::vector<double> joint_values;
+    kinematic_state->copyJointGroupPositions(joint_model_group, joint_values);
+    for(std::size_t i = 0; i < joint_names.size(); i++){
+        ROS_INFO("Joint %s: %f", joint_names[i].c_str(), joint_values[i]);
+    }
+
+    //enforce the joint limits for the currentstate
+    kinematic_state->enforceBounds();
+
+
+    kinematic_state->setToRandomPositions(joint_model_group);
+    const Eigen::Affine3d &end_effector_state = kinematic_state->getGlobalLinkTransform("arm_6_link");
+    ROS_INFO_STREAM("Translation: " << end_effector_state.translation());
+    ROS_INFO_STREAM("Rotation: " << end_effector_state.rotation());
+
+
+    bool found_ik = kinematic_state->setFromIK(joint_model_group, end_effector_state, 10, 0.1);
+    if(found_ik){
+        kinematic_state->copyJointGroupPositions(joint_model_group, joint_values);
+        ROS_INFO("Found IK solution:");
+        for(std::size_t i = 0; i < joint_names.size(); i++){
+            ROS_INFO("Joint %s: %f", joint_names[i].c_str(), joint_values[i]);
+        }
+    }else{
+        ROS_INFO("Did not find IK solution");
+    
+    }
+
 
     moveit::planning_interface::MoveGroup::Plan my_plan;
     bool success = group.plan(my_plan);
