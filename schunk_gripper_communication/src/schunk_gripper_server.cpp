@@ -16,6 +16,8 @@
 #include <visualization_msgs/Marker.h>
 #include <tf/transform_broadcaster.h>
 #include <moveit/collision_detection/collision_common.h>
+#include <Eigen/Geometry>
+
 
 //#include <planning_scene_interface.h>
 
@@ -39,6 +41,18 @@ bool set_motor(double motorvalue)
     ROS_INFO("Completed motor movement - returning.");
     return true;
 }
+
+Eigen::Affine3d create_rotation_matrix(double ax, double ay, double az){
+    Eigen::Affine3d rx = 
+        Eigen::Affine3d(Eigen::AngleAxisd(ax, Eigen::Vector3d(1, 0, 0)));
+    Eigen::Affine3d ry = 
+        Eigen::Affine3d(Eigen::AngleAxisd(ax, Eigen::Vector3d(0, 1, 0)));
+    Eigen::Affine3d rz = 
+        Eigen::Affine3d(Eigen::AngleAxisd(ax, Eigen::Vector3d(0, 0, 1)));
+
+    return rz * ry * rx;
+}
+
 
 bool place_point(){
 
@@ -115,13 +129,20 @@ bool plan_motion(){
     }
     
     moveit_msgs::AttachedCollisionObject attached_object;
-    attached_object.link_name = "gripper_link";
-    attached_object.object.header.frame_id = "gripper_link";
+    attached_object.link_name = "base_link";
+    attached_object.object.header.frame_id = "base_link";
 
     attached_object.object.id = "box";
+    double box_x = 0.4;
+    double box_y = 0.4;
+    double box_z = 0.05;
 
     geometry_msgs::Pose pose;
     pose.orientation.w = 1.0;
+    pose.position.x = box_x;
+    pose.position.y = box_y;
+    pose.position.z = box_z;
+
 
     shape_msgs::SolidPrimitive primitive;
     primitive.type = primitive.BOX;
@@ -159,10 +180,12 @@ bool plan_motion(){
 
 /*
 */ 
+    /*
     std::vector<double> group_variable_values;
     group.getCurrentState()->copyJointGroupPositions(group.getCurrentState()->getRobotModel()->getJointModelGroup(group.getName()), group_variable_values);
     group_variable_values[0] = -1.0;
     group.setJointValueTarget(group_variable_values);
+    */
     //load the robot model 
     robot_model_loader::RobotModelLoader robot_model_loader("robot_description");
     robot_model::RobotModelPtr kinematic_model = robot_model_loader.getModel();
@@ -177,27 +200,40 @@ bool plan_motion(){
     kinematic_state->setToDefaultValues();
     const robot_state::JointModelGroup* joint_model_group = kinematic_model->getJointModelGroup("Arm");
     const std::vector<std::string> &joint_names = joint_model_group->getJointModelNames();
+    std::vector<double> joint_values;
+    kinematic_state->copyJointGroupPositions(joint_model_group, joint_values);
 
     //print out the joint values for testing
+/*
     std::vector<double> joint_values;
     kinematic_state->copyJointGroupPositions(joint_model_group, joint_values);
     for(std::size_t i = 0; i < joint_names.size(); i++){
         ROS_INFO("Joint %s: %f", joint_names[i].c_str(), joint_values[i]);
     }
-
+*/
     //enforce the joint limits for the currentstate
     kinematic_state->enforceBounds();
 
     //set the kinematic state to random to test forward kinematics
     //fk: random pose of arm -> eef pose
+  /*
     kinematic_state->setToRandomPositions(joint_model_group);
     const Eigen::Affine3d &end_effector_state = kinematic_state->getGlobalLinkTransform("arm_6_link");
     ROS_INFO_STREAM("Translation: " << end_effector_state.translation());
     ROS_INFO_STREAM("Rotation: " << end_effector_state.rotation());
-
-
+*/
+/*
     //find the inverse kinematics
     //ik: random pose of eef -> pose of arm
+  */
+    //const Eigen::Affine3d &end_effector_state = kinematic_state->getGlobalLinkTransform("gripper_link");
+    Eigen::Affine3d r = create_rotation_matrix(1.0, 1.0, 1.0);
+    Eigen::Affine3d t(Eigen::Translation3d(Eigen::Vector3d(box_x,box_y,box_z)));
+
+    Eigen::Affine3d m = (t * r);
+
+    const Eigen::Affine3d &end_effector_state = m;
+
     bool found_ik = kinematic_state->setFromIK(joint_model_group, end_effector_state, 10, 0.1);
     if(found_ik){
         kinematic_state->copyJointGroupPositions(joint_model_group, joint_values);
