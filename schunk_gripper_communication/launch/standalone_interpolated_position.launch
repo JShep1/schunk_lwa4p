@@ -6,7 +6,7 @@
   <arg name="pcan_device" default="auto" />
   <arg name="trajectory_controller_name" default="pos_based_pos_traj_controller_arm" />
 
-  <include file="$(find schunk_canopen_driver)/launch/driver.launch">
+  <include file="$(find schunk_gripper_communication)/launch/driver.launch">
     <arg name="pcan_device" value="$(arg pcan_device)" />
     <arg name="with_ros_control" value="True" />
     <arg name="do_autostart" value="True" />
@@ -15,10 +15,10 @@
   </include>
 
   <!-- robot model -->
-  <param name="robot_description" command="rosrun xacro xacro --inorder '$(find schunk_canopen_driver)/urdf/lwa4p/arm.urdf.xacro'" />
+  <param name="robot_description" command="rosrun xacro xacro --inorder '$(find schunk_gripper_communication)/urdf/lwa4p/arm.urdf.xacro'" />
 
   <!-- ROS-Control system bringup -->
-  <include file="$(find schunk_canopen_driver)/launch/ros_control.launch">
+  <include file="$(find schunk_gripper_communication)/launch/ros_control.launch">
       <arg name="trajectory_controller_name" value="$(arg trajectory_controller_name)" />
   </include>
 

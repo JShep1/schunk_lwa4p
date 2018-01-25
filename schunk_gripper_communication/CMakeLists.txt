@@ -33,6 +33,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   std_srvs
+  tf
   urdf
 )
 
@@ -42,9 +43,9 @@ add_definitions( ${icl_core_DEFINITIONS} )
 add_definitions( ${icl_comm_DEFINITIONS} )
 
 if(icl_comm_icl_comm_websocket_FOUND)
-  message(STATUS "Building schunk_canopen_driver with icl_comm_websocket support." )
+  message(STATUS "Building schunk_gripper_communication with icl_comm_websocket support." )
 else ()
-  message(STATUS "Building schunk_canopen_driver without icl_comm_websocket support." )
+  message(STATUS "Building schunk_gripper_communication without icl_comm_websocket support." )
 endif()
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -177,13 +178,32 @@ include_directories(
   ${icl_comm_INCLUDE_DIRS}
 )
 
-add_executable(schunk_canopen_driver_node
+
+#add_executable(collision_contact_tutorial
+#    src/collision_contact_tutorial.cpp
+#    src/interactive_robot.cpp
+#    src/imarker.cpp
+#    src/pose_string.cpp
+#    )
+#target_link_libraries(collision_contact_tutorial
+#    ${catkin_LIBRARIES}
+#    ${Boost_LIBRARIES}
+#    interactive_markers
+    
+#    )
+
+
+add_executable(schunk_gripper_communication_node
     src/SchunkCanopenNode.cpp
     src/SchunkCanopenHardwareInterface.cpp
     )
-add_dependencies(schunk_canopen_driver_node ${PROJECT_NAME}_generate_messages_cpp)
 
-target_link_libraries(schunk_canopen_driver_node
+
+
+
+add_dependencies(schunk_gripper_communication_node ${PROJECT_NAME}_generate_messages_cpp)
+
+target_link_libraries(schunk_gripper_communication_node
     ${icl_hardware_LIBRARIES}
     ${icl_hardware_canopen_LIBRARIES}
     ${icl_core_LIBRARIES}
@@ -191,13 +211,13 @@ target_link_libraries(schunk_canopen_driver_node
     ${catkin_LIBRARIES}
 )
 
-add_executable(schunk_canopen_driver_move_home_node
+add_executable(schunk_gripper_communication_move_home_node
     src/MoveToHomeNode.cpp
     )
 
-add_dependencies(schunk_canopen_driver_move_home_node ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(schunk_gripper_communication_move_home_node ${PROJECT_NAME}_generate_messages_cpp)
 
-target_link_libraries(schunk_canopen_driver_move_home_node
+target_link_libraries(schunk_gripper_communication_move_home_node
     ${icl_hardware_LIBRARIES}
     ${icl_hardware_canopen_LIBRARIES}
     ${icl_core_LIBRARIES}
@@ -208,6 +228,7 @@ target_link_libraries(schunk_canopen_driver_move_home_node
 
 add_executable(schunk_gripper_server 
     src/schunk_gripper_server.cpp)
+
 target_link_libraries(schunk_gripper_server 
     ${catkin_LIBRARIES} 
     ${PYTHON_LIBRARIES})
@@ -257,7 +278,7 @@ add_dependencies(schunk_gripper_client schunk_gripper_communication_gencpp)
 ## Install ##
 #############
 ## Mark executables and/or libraries for installation
- install(TARGETS schunk_canopen_driver_node schunk_canopen_driver_move_home_node
+ install(TARGETS schunk_gripper_communication_node schunk_gripper_communication_move_home_node
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

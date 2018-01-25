@@ -11,7 +11,7 @@
   <arg name="trajectory_controller_name" />
 
   <!-- Load controller settings -->
-  <rosparam file="$(find schunk_canopen_driver)/config/arm_controllers.yaml" command="load"/>
+  <rosparam file="$(find schunk_gripper_communication)/config/arm_controllers.yaml" command="load"/>
 
   <!-- spawn controller manager -->
   <node name="ros_control_controller_spawner" pkg="controller_manager" type="spawner" respawn="false"

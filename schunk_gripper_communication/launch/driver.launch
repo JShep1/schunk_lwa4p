@@ -22,20 +22,20 @@
 
 
   <!-- Joint limits for the speed and acceleration of individual joints -->
-  <rosparam command="load" file="$(find schunk_canopen_driver)/config/joint_limits.yaml"/>
+  <rosparam command="load" file="$(find schunk_gripper_communication)/config/joint_limits.yaml"/>
 
   <!-- The actual driver node -->
-  <node name="schunk_canopen_node" pkg="schunk_canopen_driver" type="schunk_canopen_driver_node" output="screen" launch-prefix="$(arg launch_prefix)">
+  <node name="schunk_canopen_node" pkg="schunk_gripper_communication" type="schunk_gripper_communication_node" output="screen" launch-prefix="$(arg launch_prefix)">
     <!--   Set env variable for the error codes   -->
-    <env name="CANOPEN_RESOURCE_PATH" value="$(find schunk_canopen_driver)/etc/error_codes" />
+    <env name="CANOPEN_RESOURCE_PATH" value="$(find schunk_gripper_communication)/etc/error_codes" />
     <param name="frequency"           type="int"      value="$(arg frequency)" />
     <param name="can_device_name"          type="string"   value="$(arg pcan_device)"   />
     <param name="autostart"          type="bool"   value="$(arg do_autostart)"   />
     <param name="use_ros_control" type="bool" value="$(arg with_ros_control)"/>
     <param name="traj_controller_name" type="string" value="$(arg trajectory_controller_name)"/>
     <!-- Config files to indicate what CanOpen Nodes to start -->
-    <rosparam command="load" file="$(find schunk_canopen_driver)/config/example_config.yaml"/>
-    <rosparam command="load" file="$(find schunk_canopen_driver)/config/node_mapping.yaml"/>
+    <rosparam command="load" file="$(find schunk_gripper_communication)/config/example_config.yaml"/>
+    <rosparam command="load" file="$(find schunk_gripper_communication)/config/node_mapping.yaml"/>
 
   </node>
 </launch>

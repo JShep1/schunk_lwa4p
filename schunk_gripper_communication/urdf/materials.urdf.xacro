@@ -13,4 +13,8 @@
     <color rgba="0.0 0.0 0.25 1.0"/>
   </material>
 
+  <material name="Schunk/Yellow">
+    <color rgba="0.25 0.25 0.0 1.0"/>
+  </material>
+
 </robot>

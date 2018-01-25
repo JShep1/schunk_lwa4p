@@ -157,7 +157,11 @@ int main(int argc, char** argv)
     ROS_INFO_STREAM ("Enabled nodes from chain " << chain_handles[i]->getName());
     std::vector<DS301Node::Ptr> nodes = chain_handles[i]->getNodes();
     std::vector<float> targets (nodes.size(), 0.0);
-
+    targets[0] = -2.24;
+    targets[1] = 0.45;
+    targets[2] = 0.49;
+    targets[3] = 0.22;
+    targets[4] = -0.1;
     chain_handles[i]->setTarget(targets);
   }
   my_controller->enablePPMotion();

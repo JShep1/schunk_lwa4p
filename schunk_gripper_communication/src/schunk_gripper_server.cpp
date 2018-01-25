@@ -6,12 +6,16 @@
 #include "schunk_gripper_communication/schunk_gripper.h"
 #include "moveit/move_group_interface/move_group.h"
 #include "moveit/planning_scene_interface/planning_scene_interface.h"
+#include "moveit/planning_scene/planning_scene.h"
 #include <moveit/robot_model_loader/robot_model_loader.h>
 #include <moveit/robot_model/robot_model.h>
 #include <moveit/robot_model/joint_model.h>
 //#include <moveit/robot_state/joint_state_group.h>
 #include <moveit/robot_state/robot_state.h>
 #include <eigen_conversions/eigen_msg.h>
+#include <visualization_msgs/Marker.h>
+#include <tf/transform_broadcaster.h>
+#include <moveit/collision_detection/collision_common.h>
 
 //#include <planning_scene_interface.h>
 
@@ -36,6 +40,60 @@ bool set_motor(double motorvalue)
     return true;
 }
 
+bool place_point(){
+
+    ros::NodeHandle n;
+    ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
+   
+    ros::Rate r(30); 
+    ros::AsyncSpinner spinner(1);
+    spinner.start();
+    
+    //ros::Rate r(30);
+    float f = 0.0;
+
+    while(ros::ok()){
+        visualization_msgs::Marker points;
+        points.header.frame_id = "/my_frame";
+        points.header.stamp = ros::Time::now();
+        points.ns = "points_and_lines";
+        points.action = visualization_msgs::Marker::ADD;
+        points.pose.orientation.w = 1.0;
+
+        points.id = 0;
+
+        points.type = visualization_msgs::Marker::POINTS;
+
+        points.scale.x = 0.2;
+        points.scale.y = 0.2;
+
+        points.color.g = 1.0f;
+        points.color.a = 1.0;
+
+        for(int32_t i = 0; i < 10; ++i){
+            float y = 5 * sin(f + i / 100.0f * 2 * M_PI);
+            float z = 5 * cos(f + i / 100.0f * 2 * M_PI);
+
+            geometry_msgs::Point p;
+            p.x = (int32_t)i - 50;
+            p.y = y;
+            p.z = z;
+
+            points.points.push_back(p);
+
+            p.z += 1.0;
+
+        }
+        
+        marker_pub.publish(points);
+
+        r.sleep();
+        f += 0.04;
+
+    }
+    return true;
+}
+
 bool plan_motion(){
     ROS_INFO("Motion planning in progress.");
     //declare the movegroup to be planned for
@@ -46,11 +104,51 @@ bool plan_motion(){
     //start thread
     ros::AsyncSpinner spinner(1);
     spinner.start();
-    
     //display publisher for visualizing motion plan
     moveit_msgs::DisplayTrajectory display_trajectory;
     ros::Publisher display_publisher = node_handle.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path",1,true);
+    ros::Publisher planning_scene_diff_publisher = node_handle.advertise<moveit_msgs::PlanningScene>("planning_scene",1);
+
+    while(planning_scene_diff_publisher.getNumSubscribers() < 1){
+        ros::WallDuration sleep_t(0.5);
+        sleep_t.sleep();
+    }
     
+    moveit_msgs::AttachedCollisionObject attached_object;
+    attached_object.link_name = "gripper_link";
+    attached_object.object.header.frame_id = "gripper_link";
+
+    attached_object.object.id = "box";
+
+    geometry_msgs::Pose pose;
+    pose.orientation.w = 1.0;
+
+    shape_msgs::SolidPrimitive primitive;
+    primitive.type = primitive.BOX;
+    primitive.dimensions.resize(3);
+    primitive.dimensions[0] = 0.1;
+    primitive.dimensions[1] = 0.1;
+    primitive.dimensions[2] = 0.1;
+
+    attached_object.object.primitives.push_back(primitive);
+    attached_object.object.primitive_poses.push_back(pose);
+    attached_object.object.operation = attached_object.object.ADD;
+
+    ROS_INFO("Adding the object into the world at the location of the end effector");
+
+    moveit_msgs::PlanningScene moveit_planning_scene;
+    moveit_planning_scene.world.collision_objects.push_back(attached_object.object);
+    moveit_planning_scene.is_diff = true;
+    planning_scene_diff_publisher.publish(moveit_planning_scene);
+    //sleep_time.sleep();
+/*
+    ros::ServiceClient planning_scene_diff_client = node_handle.serviceClient<moveit_msgs::ApplyPlanningScene>("apply_planning_scene");
+    planning_scene_diff_client.waitForExistence();
+
+    moveit_msgs::ApplyPlanningScene srv;
+    srv.request.scene = planning_scene;
+    planning_scene_diff_client.call(srv);
+*/
     //Output info to make sure everything's loaded and good
     ROS_INFO("Reference frame: %s.", group.getPlanningFrame().c_str());
     ROS_INFO("EE link: %s.", group.getEndEffectorLink().c_str());
@@ -60,14 +158,15 @@ bool plan_motion(){
     //get current state of joints and modify one for easy motion plan testing
 
 /*
+*/ 
     std::vector<double> group_variable_values;
     group.getCurrentState()->copyJointGroupPositions(group.getCurrentState()->getRobotModel()->getJointModelGroup(group.getName()), group_variable_values);
     group_variable_values[0] = -1.0;
     group.setJointValueTarget(group_variable_values);
-*/ 
     //load the robot model 
     robot_model_loader::RobotModelLoader robot_model_loader("robot_description");
     robot_model::RobotModelPtr kinematic_model = robot_model_loader.getModel();
+    planning_scene::PlanningScene planning_scene(kinematic_model);
 
     //print out the frame of the robot model to test
     ROS_INFO("Model frame: %s", kinematic_model->getModelFrame().c_str());
@@ -121,10 +220,13 @@ bool plan_motion(){
     */
     
 
+/*
     tf::poseEigenToMsg(end_effector_state, target_pose1);
-
+*/
     moveit::planning_interface::MoveGroup::Plan my_plan;
+/*
     group.setPoseTarget(target_pose1);
+  */
     bool success = group.plan(my_plan);
     sleep(5.0);
     if(1){
@@ -138,6 +240,16 @@ bool plan_motion(){
     if(0){
         group.move();
     }
+
+    collision_detection::CollisionRequest collision_request;
+    collision_detection::CollisionResult collision_result;
+
+    planning_scene.checkSelfCollision(collision_request, collision_result);
+
+    ROS_INFO_STREAM("Curent state is "
+                    <<(collision_result.collision ? "in" : "not in")
+                    << " self collision");
+
     return true;
 }
 

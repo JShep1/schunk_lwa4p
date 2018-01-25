@@ -4,10 +4,10 @@
   <xacro:property name="safety_offset" value="0.02"/>
 
   <!-- Some additional information used by other tools -->
-  <xacro:include filename="$(find schunk_canopen_driver)/urdf/lwa4p/lwa4p.gazebo.xacro" />
-  <xacro:include filename="$(find schunk_canopen_driver)/urdf/lwa4p/lwa4p.transmission.xacro" />
+  <xacro:include filename="$(find schunk_gripper_communication)/urdf/lwa4p/lwa4p.gazebo.xacro" />
+  <xacro:include filename="$(find schunk_gripper_communication)/urdf/lwa4p/lwa4p.transmission.xacro" />
 
-  <xacro:include filename="$(find schunk_canopen_driver)/urdf/materials.urdf.xacro" />
+  <xacro:include filename="$(find schunk_gripper_communication)/urdf/materials.urdf.xacro" />
 
   <xacro:macro name="default_inertial" params="mass">
     <inertial>
@@ -27,8 +27,67 @@
       <parent link="${parent}" />
       <child link="${name}_0_link" />
     </joint>
+    
+    <joint name="table_base_joint" type="fixed" >
+      <xacro:insert_block name="origin" />
+      <parent link="${parent}" />
+      <child link="table_link" />
+    </joint>
+    
+    <joint name="camera_base_joint" type="fixed" >
+      <xacro:insert_block name="origin" />
+      <parent link="${parent}" />
+      <child link="camera_link" />
+    </joint>
+    
+    <link name="camera_link">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <mass value="10"/>
+        <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01" />
+      </inertial>
 
-    <link name="${name}_0_link">
+       <visual>
+        <origin xyz="0 0 -0.01" rpy="1.57 0 0" />
+        <geometry>
+          <mesh filename="package://schunk_gripper_communication/meshes/cylinder-notop.dae" scale="1.85 0.2 1.85"/>
+        </geometry>
+        <material name="Schunk/Yellow" />
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 -0.01" rpy="1.57 0 0" />
+        <geometry>
+          <mesh filename="package://schunk_gripper_communication/meshes/cylinder-notop.dae" scale="1.85 0.2 1.85"/>
+        </geometry>
+      </collision>
+     </link>
+    
+
+    <link name="table_link">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <mass value="10"/>
+        <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01" />
+      </inertial>
+
+       <visual>
+        <origin xyz="0 0 -0.01" rpy="0 0 0" />
+        <geometry>
+            <cylinder length="0.01" radius="0.9" />
+        </geometry>
+        <material name="Schunk/Yellow" />
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 -0.01" rpy="0 0 0" />
+        <geometry>
+            <cylinder length="0.01" radius="0.9" />
+        </geometry>
+      </collision>
+     </link>
+     
+     <link name="${name}_0_link">
       <inertial>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <mass value="0.29364"/>
@@ -38,7 +97,7 @@
        <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://schunk_canopen_driver/meshes/lwa4p/arm_0_link.dae" />
+          <mesh filename="package://schunk_gripper_communication/meshes/lwa4p/arm_0_link.dae" />
         </geometry>
         <material name="Schunk/DarkGrey" />
       </visual>
@@ -46,7 +105,7 @@
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://schunk_canopen_driver/meshes/lwa4p/arm_0_link.stl" />
+          <mesh filename="package://schunk_gripper_communication/meshes/lwa4p/arm_0_link.stl" />
         </geometry>
       </collision>
      </link>
@@ -74,7 +133,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://schunk_canopen_driver/meshes/lwa4p/arm_1_link.dae" />
+          <mesh filename="package://schunk_gripper_communication/meshes/lwa4p/arm_1_link.dae" />
         </geometry>
         <material name="Schunk/DarkGrey" />
       </visual>
@@ -82,7 +141,7 @@
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://schunk_canopen_driver/meshes/lwa4p/arm_1_link.stl" />
+          <mesh filename="package://schunk_gripper_communication/meshes/lwa4p/arm_1_link.stl" />
         </geometry>
       </collision>
     </link>
@@ -111,7 +170,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://schunk_canopen_driver/meshes/lwa4p/arm_2_link.dae" />
+          <mesh filename="package://schunk_gripper_communication/meshes/lwa4p/arm_2_link.dae" />
         </geometry>
         <material name="Schunk/Blue" />
       </visual>
@@ -119,7 +178,7 @@
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://schunk_canopen_driver/meshes/lwa4p/arm_2_link.stl" />
+          <mesh filename="package://schunk_gripper_communication/meshes/lwa4p/arm_2_link.stl" />
         </geometry>
       </collision>
     </link>
@@ -147,7 +206,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://schunk_canopen_driver/meshes/lwa4p/arm_3_link.dae" />
+          <mesh filename="package://schunk_gripper_communication/meshes/lwa4p/arm_3_link.dae" />
         </geometry>
         <material name="Schunk/DarkGrey" />
       </visual>
@@ -155,7 +214,7 @@
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://schunk_canopen_driver/meshes/lwa4p/arm_3_link.stl" />
+          <mesh filename="package://schunk_gripper_communication/meshes/lwa4p/arm_3_link.stl" />
         </geometry>
       </collision>
     </link>
@@ -182,7 +241,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://schunk_canopen_driver/meshes/lwa4p/arm_4_link.dae" />
+          <mesh filename="package://schunk_gripper_communication/meshes/lwa4p/arm_4_link.dae" />
         </geometry>
         <material name="Schunk/Blue" />
       </visual>
@@ -190,7 +249,7 @@
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://schunk_canopen_driver/meshes/lwa4p/arm_4_link.stl" />
+          <mesh filename="package://schunk_gripper_communication/meshes/lwa4p/arm_4_link.stl" />
         </geometry>
       </collision>
     </link>
@@ -216,7 +275,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://schunk_canopen_driver/meshes/lwa4p/arm_5_link.dae" />
+          <mesh filename="package://schunk_gripper_communication/meshes/lwa4p/arm_5_link.dae" />
         </geometry>
         <material name="Schunk/DarkGrey" />
       </visual>
@@ -224,7 +283,7 @@
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://schunk_canopen_driver/meshes/lwa4p/arm_5_link.stl" />
+          <mesh filename="package://schunk_gripper_communication/meshes/lwa4p/arm_5_link.stl" />
         </geometry>
       </collision>
     </link>
@@ -251,7 +310,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://schunk_canopen_driver/meshes/lwa4p/arm_6_link.dae" />
+          <mesh filename="package://schunk_gripper_communication/meshes/lwa4p/arm_6_link.dae" />
         </geometry>
         <material name="Schunk/DarkGrey" />
       </visual>
@@ -259,16 +318,55 @@
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://schunk_canopen_driver/meshes/lwa4p/arm_6_link.stl" />
+          <mesh filename="package://schunk_gripper_communication/meshes/lwa4p/arm_6_link.stl" />
         </geometry>
       </collision>
     </link>
 
 
     <!-- joint between arm_6_link and tcp_link -->
-    <joint name="${name}_tcp_joint" type="fixed">
+    <!--<joint name="${name}_tcp_joint" type="fixed">
       <origin xyz="0 0 0.08" rpy="0 0 0" />
       <parent link="${name}_6_link"/>
+      <child link="${name}_tcp_link"/>
+    </joint>
+    <link name="${name}_tcp_link">
+    </link>
+    -->
+    
+    <joint name="gripper_joint" type="fixed" >
+        <origin xyz="0 0 0.32" rpy="0 0 0" />
+        <parent link="${name}_6_link" />
+      <child link="gripper_link" />
+    </joint>
+
+    <link name="gripper_link">
+      <inertial>
+        <origin xyz="0 0 0.13" rpy="0 0 0" />
+        <mass value="0.5"/>
+        <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01" />
+      </inertial>
+
+       <visual>
+        <origin xyz="0 0 -0.11" rpy="0 0 0" />
+        <geometry>
+            <box size="0.1 0.1 0.25" />
+        </geometry>
+        <material name="Schunk/Yellow" />
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 -0.11" rpy="0 0 0" />
+        <geometry>
+            <box size="0.1 0.1 0.25" />
+        </geometry>
+      </collision>
+     </link>
+     
+<!-- joint between arm_6_link and tcp_link -->
+    <joint name="${name}_tcp_joint" type="fixed">
+      <origin xyz="0 0 0.08" rpy="0 0 0" />
+      <parent link="gripper_link"/>
       <child link="${name}_tcp_link"/>
     </joint>
     <link name="${name}_tcp_link">
