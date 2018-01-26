@@ -21,17 +21,18 @@
   <xacro:macro name="schunk_lwa4p" params="parent name *origin">
 
 
-    <!-- joint between base_link and arm_0_link -->
-    <joint name="${name}_0_joint" type="fixed" >
-      <xacro:insert_block name="origin" />
-      <parent link="${parent}" />
-      <child link="${name}_0_link" />
-    </joint>
     
     <joint name="table_base_joint" type="fixed" >
       <xacro:insert_block name="origin" />
       <parent link="${parent}" />
       <child link="table_link" />
+    </joint>
+    
+<!-- joint between base_link and arm_0_link -->
+    <joint name="${name}_0_joint" type="fixed" >
+      <xacro:insert_block name="origin" />
+      <parent link="table_link" />
+      <child link="${name}_0_link" />
     </joint>
     
     <joint name="camera_base_joint" type="fixed" >
@@ -72,7 +73,7 @@
       </inertial>
 
        <visual>
-        <origin xyz="0 0 -0.01" rpy="0 0 0" />
+        <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
             <cylinder length="0.01" radius="0.9" />
         </geometry>
@@ -80,7 +81,7 @@
       </visual>
 
       <collision>
-        <origin xyz="0 0 -0.01" rpy="0 0 0" />
+        <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
             <cylinder length="0.01" radius="0.9" />
         </geometry>
@@ -348,17 +349,17 @@
       </inertial>
 
        <visual>
-        <origin xyz="0 0 -0.11" rpy="0 0 0" />
+        <origin xyz="0 0 -0.17" rpy="0 0 0" />
         <geometry>
-            <box size="0.1 0.1 0.25" />
+            <box size="0.1 0.1 0.13" />
         </geometry>
         <material name="Schunk/Yellow" />
       </visual>
 
       <collision>
-        <origin xyz="0 0 -0.11" rpy="0 0 0" />
+        <origin xyz="0 0 -0.17" rpy="0 0 0" />
         <geometry>
-            <box size="0.1 0.1 0.25" />
+            <box size="0.1 0.1 0.13" />
         </geometry>
       </collision>
      </link>
