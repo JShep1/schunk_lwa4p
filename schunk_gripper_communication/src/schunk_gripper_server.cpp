@@ -133,9 +133,9 @@ bool plan_motion(){
     attached_object.object.header.frame_id = "base_link";
 
     attached_object.object.id = "box";
-    double box_x = 0.4;
-    double box_y = 0.4;
-    double box_z = 0.05;
+    double box_x = 0.3;
+    double box_y = 0.3;
+    double box_z = 0.07;
 
     geometry_msgs::Pose pose;
     pose.orientation.w = 1.0;
@@ -173,6 +173,7 @@ bool plan_motion(){
     //Output info to make sure everything's loaded and good
     ROS_INFO("Reference frame: %s.", group.getPlanningFrame().c_str());
     ROS_INFO("EE link: %s.", group.getEndEffectorLink().c_str());
+    group.setPlannerId("RRTConnectkConfigDefault");
 /* 
 */
     
@@ -227,6 +228,10 @@ bool plan_motion(){
     //ik: random pose of eef -> pose of arm
   */
     //const Eigen::Affine3d &end_effector_state = kinematic_state->getGlobalLinkTransform("gripper_link");
+    //
+
+    /*
+    */
     Eigen::Affine3d r = create_rotation_matrix(1.0, 1.0, 1.0);
     Eigen::Affine3d t(Eigen::Translation3d(Eigen::Vector3d(box_x,box_y,box_z)));
 
@@ -235,19 +240,39 @@ bool plan_motion(){
     const Eigen::Affine3d &end_effector_state = m;
 
     bool found_ik = kinematic_state->setFromIK(joint_model_group, end_effector_state, 10, 0.1);
+    geometry_msgs::Pose target_pose1;
+    target_pose1.orientation.w = 1.0;
+    target_pose1.position.x = box_x;
+    target_pose1.position.y = box_y;
+    target_pose1.position.z = box_z;
+      //TODO figure out constraints
+    //planning_interface::MotionPlanRequest req;
+
+    //req.group_name = "Arm";
+
+    moveit::planning_interface::MoveGroup::Plan my_plan;
+
+    std::vector<double> group_variable_values;
+    group.getCurrentState()->copyJointGroupPositions(group.getCurrentState()->getRobotModel()->getJointModelGroup(group.getName()), group_variable_values);
+    group_variable_values[0] = -1.794;
+    group_variable_values[1] = -1.794;
+
     if(found_ik){
         kinematic_state->copyJointGroupPositions(joint_model_group, joint_values);
         ROS_INFO("Found IK solution:");
         for(std::size_t i = 0; i < joint_names.size(); i++){
             ROS_INFO("Joint %s: %f", joint_names[i].c_str(), joint_values[i]);
+//            if(i < 6){
+ //               group_variable_values[i] = joint_values[i];
+//            }
         }
     }else{
         ROS_INFO("Did not find IK solution");
     
     }
+    group.setJointValueTarget(group_variable_values);
 
     //instantiate a motion plan and plan for it with the Arm group
-    geometry_msgs::Pose target_pose1;
     /*
     target_pose1.orientation.w = 1.0;
     target_pose1.position.x = 0.58;
@@ -259,10 +284,12 @@ bool plan_motion(){
 /*
     tf::poseEigenToMsg(end_effector_state, target_pose1);
 */
-    moveit::planning_interface::MoveGroup::Plan my_plan;
 /*
-    group.setPoseTarget(target_pose1);
   */
+
+    /*
+    group.setPoseTarget(target_pose1);
+    */
     bool success = group.plan(my_plan);
     sleep(5.0);
     if(1){
