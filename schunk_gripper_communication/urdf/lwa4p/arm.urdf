@@ -4,32 +4,9 @@
 <!-- |    EDITING THIS FILE BY HAND IS NOT RECOMMENDED                                 | -->
 <!-- =================================================================================== -->
 <robot name="arm" xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller" xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface" xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor" xmlns:xacro="http://ros.org/wiki/xacro">
-  <link name="table_link">
-    <inertial>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="10"/><!-- guessed -->
-      <inertia ixx="1.0" ixy="0" ixz="0" iyy="1.0" iyz="0" izz="1.0"/>
-    </inertial>
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-          <cylinder length="0.6" radius="0.2" />
-      </geometry>
-      <material name="Schunk/DarkGrey"/>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-          <cylinder length="0.6" radius="0.2" />
-      </geometry>
-    </collision>
-  </link>
   <link name="base_link">
     <origin rpy="0 0 0" xyz="0 0 0"/>
   </link>
-  <!-- load the actuall LWA4p -->
-  <!-- Safety offset in rad towards the hard stop of the arm -->
-  <!-- Some additional information used by other tools -->
   <material name="Schunk/LightGrey">
     <color rgba="0.7 0.7 0.7 1.0"/>
   </material>
@@ -39,14 +16,65 @@
   <material name="Schunk/Blue">
     <color rgba="0.0 0.0 0.25 1.0"/>
   </material>
-  <!-- Schunk Powerball (LWA4P) Macro -->
-  <!-- instantiate with a base link to attach it to -->
+  <material name="Schunk/Yellow">
+    <color rgba="0.25 0.25 0.0 1.0"/>
+  </material>
+  <joint name="table_base_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="table_link"/>
+  </joint>
   <!-- joint between base_link and arm_0_link -->
   <joint name="arm_0_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 0"/>
-    <parent link="base_link"/>
+    <parent link="table_link"/>
     <child link="arm_0_link"/>
   </joint>
+  <joint name="camera_base_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+  </joint>
+  <link name="camera_link">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="10"/>
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+    </inertial>
+    <visual>
+      <origin rpy="1.57 0 0" xyz="0 0 -0.01"/>
+      <geometry>
+        <mesh filename="package://schunk_gripper_communication/meshes/cylinder-notop.dae" scale="1.85 0.2 1.85"/>
+      </geometry>
+      <material name="Schunk/Yellow"/>
+    </visual>
+    <collision>
+      <origin rpy="1.57 0 0" xyz="0 0 -0.01"/>
+      <geometry>
+        <mesh filename="package://schunk_gripper_communication/meshes/cylinder-notop.dae" scale="1.85 0.2 1.85"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="table_link">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="10"/>
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 -0.01"/>
+      <geometry>
+        <cylinder length="0.01" radius="0.9"/>
+      </geometry>
+      <material name="Schunk/Yellow"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 -0.01"/>
+      <geometry>
+        <cylinder length="0.01" radius="0.9"/>
+      </geometry>
+    </collision>
+  </link>
   <link name="arm_0_link">
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -282,14 +310,47 @@
     </collision>
   </link>
   <!-- joint between arm_6_link and tcp_link -->
+  <!--<joint name="${name}_tcp_joint" type="fixed">
+      <origin xyz="0 0 0.08" rpy="0 0 0" />
+      <parent link="${name}_6_link"/>
+      <child link="${name}_tcp_link"/>
+    </joint>
+    <link name="${name}_tcp_link">
+    </link>
+    -->
+  <joint name="gripper_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0.32"/>
+    <parent link="arm_6_link"/>
+    <child link="gripper_link"/>
+  </joint>
+  <link name="gripper_link">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0.13"/>
+      <mass value="0.5"/>
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 -0.17"/>
+      <geometry>
+        <box size="0.1 0.1 0.13"/>
+      </geometry>
+      <material name="Schunk/Yellow"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 -0.17"/>
+      <geometry>
+        <box size="0.1 0.1 0.13"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- joint between arm_6_link and tcp_link -->
   <joint name="arm_tcp_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 0.08"/>
-    <parent link="arm_6_link"/>
+    <parent link="gripper_link"/>
     <child link="arm_tcp_link"/>
   </joint>
   <link name="arm_tcp_link">
     </link>
-  <!-- extensions -->
   <gazebo reference="arm_0_link">
     <gravity>true</gravity>
     <self_collide>false</self_collide>
