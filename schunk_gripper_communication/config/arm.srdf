@@ -18,6 +18,7 @@
         <link name="arm_5_link" />
         <link name="arm_6_link" />
         <link name="gripper_link" />
+        <link name="table_link" />
         <joint name="arm_0_joint" />
         <joint name="arm_1_joint" />
         <joint name="arm_2_joint" />
@@ -26,6 +27,7 @@
         <joint name="arm_5_joint" />
         <joint name="arm_6_joint" />
         <joint name="gripper_joint" />
+        <joint name="table_base_joint" />
     </group>
     <group name="eef_parent">
         <joint name="gripper_joint" />
@@ -38,20 +40,29 @@
     <disable_collisions link1="arm_0_link" link2="arm_1_link" reason="Adjacent" />
     <disable_collisions link1="arm_0_link" link2="arm_2_link" reason="Never" />
     <disable_collisions link1="arm_0_link" link2="arm_3_link" reason="Never" />
+    <disable_collisions link1="arm_0_link" link2="camera_link" reason="Never" />
     <disable_collisions link1="arm_0_link" link2="table_link" reason="Adjacent" />
     <disable_collisions link1="arm_1_link" link2="arm_2_link" reason="Adjacent" />
     <disable_collisions link1="arm_1_link" link2="arm_3_link" reason="Never" />
+    <disable_collisions link1="arm_1_link" link2="camera_link" reason="Never" />
     <disable_collisions link1="arm_1_link" link2="table_link" reason="Never" />
     <disable_collisions link1="arm_2_link" link2="arm_3_link" reason="Adjacent" />
     <disable_collisions link1="arm_2_link" link2="arm_4_link" reason="Never" />
     <disable_collisions link1="arm_2_link" link2="arm_5_link" reason="Never" />
     <disable_collisions link1="arm_2_link" link2="arm_6_link" reason="Never" />
+    <disable_collisions link1="arm_2_link" link2="camera_link" reason="Never" />
     <disable_collisions link1="arm_3_link" link2="arm_4_link" reason="Adjacent" />
     <disable_collisions link1="arm_3_link" link2="arm_5_link" reason="Never" />
     <disable_collisions link1="arm_3_link" link2="arm_6_link" reason="Never" />
+    <disable_collisions link1="arm_3_link" link2="camera_link" reason="Never" />
     <disable_collisions link1="arm_4_link" link2="arm_5_link" reason="Adjacent" />
     <disable_collisions link1="arm_4_link" link2="arm_6_link" reason="Never" />
+    <disable_collisions link1="arm_4_link" link2="camera_link" reason="Never" />
     <disable_collisions link1="arm_5_link" link2="arm_6_link" reason="Adjacent" />
+    <disable_collisions link1="arm_5_link" link2="camera_link" reason="Never" />
     <disable_collisions link1="arm_5_link" link2="gripper_link" reason="Never" />
+    <disable_collisions link1="arm_6_link" link2="camera_link" reason="Never" />
     <disable_collisions link1="arm_6_link" link2="gripper_link" reason="Adjacent" />
+    <disable_collisions link1="camera_link" link2="gripper_link" reason="Never" />
+    <disable_collisions link1="camera_link" link2="table_link" reason="Adjacent" />
 </robot>
