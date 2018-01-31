@@ -108,12 +108,40 @@ bool place_point(){
     return true;
 }
 
+bool create_matrix(double x, double y, double z, double rot_x, 
+                   double rot_y, double rot_z, Eigen::Affine3d &m){
+
+    Eigen::Affine3d r = create_rotation_matrix(rot_x, rot_y, rot_z);
+    Eigen::Affine3d t(Eigen::Translation3d(Eigen::Vector3d(x,y,z)));
+
+    m = (t * r);
+    return true;
+}
+
+
 bool plan_motion(){
+    
     ROS_INFO("Motion planning in progress.");
     //declare the movegroup to be planned for
     moveit::planning_interface::MoveGroup group("Arm");
     moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
     ros::NodeHandle node_handle;
+
+    const char* plans[] = {
+                    "SBLkConfigDefault",
+                    "ESTkConfigDefault",
+                    "LBKPIECEkConfigDefault",
+                    "BKPIECEkConfigDefault",
+                    "KPIECEkConfigDefault",
+                    "RRTkConfigDefault",
+                    "RRTConnectkConfigDefault",
+                    "RRTstarkConfigDefault",
+                    "TRRTkConfigDefault",
+                    "PRMkConfigDefault",
+                    "PRMstarkConfigDefault"
+    };
+
+    std::vector<std::string> planners(plans, plans + 11);
 
     //start thread
     ros::AsyncSpinner spinner(1);
@@ -133,9 +161,9 @@ bool plan_motion(){
     attached_object.object.header.frame_id = "base_link";
 
     attached_object.object.id = "box";
-    double box_x = 0.3;
-    double box_y = 0.3;
-    double box_z = 0.07;
+    double box_x = 0.5;
+    double box_y = 0.5;
+    double box_z = 0.5;
 
     geometry_msgs::Pose pose;
     pose.orientation.w = 1.0;
@@ -173,7 +201,7 @@ bool plan_motion(){
     //Output info to make sure everything's loaded and good
     ROS_INFO("Reference frame: %s.", group.getPlanningFrame().c_str());
     ROS_INFO("EE link: %s.", group.getEndEffectorLink().c_str());
-    group.setPlannerId("RRTConnectkConfigDefault");
+    //group.setPlannerId("RRTConnectkConfigDefault");
 /* 
 */
     
@@ -232,19 +260,23 @@ bool plan_motion(){
 
     /*
     */
-    Eigen::Affine3d r = create_rotation_matrix(1.0, 1.0, 1.0);
-    Eigen::Affine3d t(Eigen::Translation3d(Eigen::Vector3d(box_x,box_y,box_z)));
 
-    Eigen::Affine3d m = (t * r);
+    Eigen::Affine3d m;
+    create_matrix(box_x,box_y,box_z,1,1,1,m);
+
+    ROS_INFO_STREAM("Translation: " << m.translation());
+    ROS_INFO_STREAM("Rotation: " << m.rotation());
 
     const Eigen::Affine3d &end_effector_state = m;
 
-    bool found_ik = kinematic_state->setFromIK(joint_model_group, end_effector_state, 10, 0.1);
+    bool found_ik = true;//kinematic_state->setFromIK(joint_model_group, end_effector_state, 10, 0.1);
+    /*
     geometry_msgs::Pose target_pose1;
     target_pose1.orientation.w = 1.0;
     target_pose1.position.x = box_x;
     target_pose1.position.y = box_y;
     target_pose1.position.z = box_z;
+    */
       //TODO figure out constraints
     //planning_interface::MotionPlanRequest req;
 
@@ -254,42 +286,63 @@ bool plan_motion(){
 
     std::vector<double> group_variable_values;
     group.getCurrentState()->copyJointGroupPositions(group.getCurrentState()->getRobotModel()->getJointModelGroup(group.getName()), group_variable_values);
-    group_variable_values[0] = -1.794;
-    group_variable_values[1] = -1.794;
+    //group_variable_values[0] = 0;
+    //group_variable_values[1] = 1.5;
+    unsigned int planner_count = 0;
+    //while (true){
+    /*
+        if(planner_count >= planners.size()){
+        ROS_INFO("All planners attempted and no solution found.");
+        break;
+    }
+    */
+    //group.setPlannerId(planners[planner_count]);
+    //planner_count++;
+    found_ik = kinematic_state->setFromIK(joint_model_group, end_effector_state, 10, 0.1);
 
     if(found_ik){
         kinematic_state->copyJointGroupPositions(joint_model_group, joint_values);
-        ROS_INFO("Found IK solution:");
+        ROS_INFO("Found possible IK solution:");
         for(std::size_t i = 0; i < joint_names.size(); i++){
             ROS_INFO("Joint %s: %f", joint_names[i].c_str(), joint_values[i]);
 //            if(i < 6){
- //               group_variable_values[i] = joint_values[i];
+                group_variable_values[i] = joint_values[i];
 //            }
         }
+      /*  if(group_variable_values[1] > 1.5 || group_variable_values[1] < -1.5){
+           //ROS_INFO("IK solution found to be invalid. Trying again.");
+           continue;
+        }else{
+           //ROS_INFO("IK solution found to be valid.");
+            break;
+        }
+        */
     }else{
-        ROS_INFO("Did not find IK solution");
-    
+         ROS_INFO("Did not find IK solution.");
+        //continue;
     }
+    //}
     group.setJointValueTarget(group_variable_values);
 
     //instantiate a motion plan and plan for it with the Arm group
     /*
-    target_pose1.orientation.w = 1.0;
-    target_pose1.position.x = 0.58;
-    target_pose1.position.y = -0.7;
-    target_pose1.position.z = 1.0;
-    */
-    
+       target_pose1.orientation.w = 1.0;
+       target_pose1.position.x = 0.58;
+       target_pose1.position.y = -0.7;
+       target_pose1.position.z = 1.0;
+       */
 
-/*
-    tf::poseEigenToMsg(end_effector_state, target_pose1);
-*/
-/*
-  */
 
     /*
-    group.setPoseTarget(target_pose1);
+       tf::poseEigenToMsg(end_effector_state, target_pose1);
+       */
+    /*
     */
+
+    /*
+       group.setPoseTarget(target_pose1);
+       */
+    group.setPlanningTime(10.0);
     bool success = group.plan(my_plan);
     sleep(5.0);
     if(1){
@@ -300,18 +353,118 @@ bool plan_motion(){
         display_publisher.publish(display_trajectory);
         sleep(5.0);
     }
-    if(0){
-        group.move();
+    if(1){
+        group.execute(my_plan);
     }
+
+
+
+    sleep(5.0);
 
     collision_detection::CollisionRequest collision_request;
     collision_detection::CollisionResult collision_result;
 
     planning_scene.checkSelfCollision(collision_request, collision_result);
 
-    ROS_INFO_STREAM("Curent state is "
-                    <<(collision_result.collision ? "in" : "not in")
-                    << " self collision");
+    ROS_INFO_STREAM("Current state is "
+            <<(collision_result.collision ? "in" : "not in")
+            << " self collision");
+/*
+*/
+    moveit_msgs::CollisionObject remove_object;
+    remove_object.id = "box";
+    remove_object.header.frame_id = "base_link";
+    remove_object.operation = remove_object.REMOVE;
+
+
+
+    ROS_INFO("Attaching the object to the eef and removing it from the world.");
+    moveit_planning_scene.world.collision_objects.clear();
+    moveit_planning_scene.world.collision_objects.push_back(remove_object);
+    moveit_planning_scene.robot_state.attached_collision_objects.push_back(attached_object);
+    planning_scene_diff_publisher.publish(moveit_planning_scene);
+
+
+/* Item picked - begin to place
+ *
+ *
+ */
+  /*
+    kinematic_model = robot_model_loader.getModel();
+    planning_scene::PlanningScene planning_scene_two(kinematic_model);
+
+    //print out the frame of the robot model to test
+    ROS_INFO("Model frame: %s", kinematic_model->getModelFrame().c_str());
+
+    //get the joint model group which represents the robot model for 
+    //the Arm group
+    robot_state::RobotStatePtr kinematic_state_two(new robot_state::RobotState(kinematic_model));
+    moveit::planning_interface::MoveGroup group_two("Arm");
+    kinematic_state_two->setToDefaultValues();
+    const robot_state::JointModelGroup* joint_model_group_two = kinematic_model->getJointModelGroup("Arm");
+    const std::vector<std::string> &joint_names_two = joint_model_group_two->getJointModelNames();
+    std::vector<double> joint_values_two;
+    kinematic_state_two->copyJointGroupPositions(joint_model_group_two, joint_values_two);
+
+    //print out the joint values for testing
+//
+    std::vector<double> joint_values;
+    kinematic_state->copyJointGroupPositions(joint_model_group, joint_values);
+    for(std::size_t i = 0; i < joint_names.size(); i++){
+        ROS_INFO("Joint %s: %f", joint_names[i].c_str(), joint_values[i]);
+    }
+//
+    //enforce the joint limits for the currentstate
+    kinematic_state_two->enforceBounds();
+
+    //group.setStartState(*group.getCurrentState());
+    Eigen::Affine3d end_mat;
+    create_matrix(box_x-0.1,box_y-0.1,box_z-0.1,1,1,1,end_mat);
+
+    const Eigen::Affine3d &end_effector_end_state = m;
+
+    found_ik = kinematic_state_two->setFromIK(joint_model_group_two, end_effector_end_state, 10, 0.1);
+
+    if(found_ik){
+        kinematic_state->copyJointGroupPositions(joint_model_group_two, joint_values_two);
+        ROS_INFO("Found possible IK solution for 2nd scenario:");
+        for(std::size_t i = 0; i < joint_names_two.size(); i++){
+            ROS_INFO("Joint %s: %f", joint_names_two[i].c_str(), joint_values_two[i]);
+            if(i < 6){
+                group_variable_values[i] = joint_values_two[i];
+            }
+        }
+    //    if(group_variable_values[1] > 1.5 || group_variable_values[1] < -1.5){
+           //ROS_INFO("IK solution found to be invalid. Trying again.");
+           continue;
+        }else{
+           //ROS_INFO("IK solution found to be valid.");
+            break;
+        }
+  //      
+    }else{
+         ROS_INFO("Did not find IK solution.");
+        //continue;
+    }
+    //}
+    group_two.setJointValueTarget(group_variable_values);
+    moveit::planning_interface::MoveGroup::Plan my_plan_two;
+    
+    success = group_two.plan(my_plan_two);
+    sleep(5.0);
+    display_trajectory.trajectory.clear();
+    if(1){
+        //visualize the created motion plan
+        ROS_INFO("Visualizing plan 2 (item place goal) %s",success?"":"FAILED");
+        display_trajectory.trajectory_start = my_plan_two.start_state_;
+        display_trajectory.trajectory.push_back(my_plan_two.trajectory_);
+        display_publisher.publish(display_trajectory);
+        sleep(5.0);
+    }
+    if(1){
+        group_two.execute(my_plan_two);
+    }
+*/
 
     return true;
 }
@@ -322,7 +475,7 @@ bool execute_motion(){
 }
 
 bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
-                     schunk_gripper_communication::schunk_gripper::Response &res)
+        schunk_gripper_communication::schunk_gripper::Response &res)
 {
     res.motorvalue = req.motorvalue;
     std::string function_1 = "set_motor";
@@ -346,7 +499,7 @@ bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
             ROS_ERROR("Could not create motion plan. Returning.");
             return false;
         }
-        
+
     } else if(!function_3.compare((std::string)req.function_name)){
         ROS_INFO("Found function execute_motion");
         if(execute_motion()){
@@ -356,7 +509,7 @@ bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
             ROS_ERROR("Could not execute motion. Returning.");
             return false;
         }
-        
+
     }
 
     else{
@@ -371,15 +524,15 @@ bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
     }
     //std::string str = convertToStr<double>(&(res.motorvalue));
     //std::cout << str << std::endl;
-/*
-    std::stringstream ss;
-    ss << (double)req.motorvalue;
-    char str1[50];
-    const char* str = ss.str().c_str();
-    strcpy(str1, "motorvalue = ");
-    strcat(str1, str);
-    strcat(str1, "\nprint motorvalue \n");
-    ROS_INFO("Running Python Script");
+    /*
+       std::stringstream ss;
+       ss << (double)req.motorvalue;
+       char str1[50];
+       const char* str = ss.str().c_str();
+       strcpy(str1, "motorvalue = ");
+       strcat(str1, str);
+       strcat(str1, "\nprint motorvalue \n");
+       ROS_INFO("Running Python Script");
     //std::cout << str1 << std::endl;
     //ROS_INFO("%s",((double)res.motorvalue).str().c_str());
     Py_Initialize();
@@ -390,7 +543,7 @@ bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
 
     ROS_INFO("Setting motor value to %f", (double)res.motorvalue);
     ROS_INFO("Completed motor movement - returning.");
-  */
+    */
     return true;
 }
 
@@ -399,82 +552,82 @@ bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
 
 /*
 
-bool set_motor(schunk_gripper_communication::schunk_gripper::Request &req,
-               schunk_gripper_communication::schunk_gripper::Response &res)
-{
-    res.motorvalue = req.motorvalue;
-    res.pythonfile = req.pythonfile;
-    res.pythonfunction = req.pythonfunction;
-    ROS_INFO("Setting motor value to %f", (double)res.motorvalue);
-    ROS_INFO("Completed motor movement - returning.");
-    return true;
+   bool set_motor(schunk_gripper_communication::schunk_gripper::Request &req,
+   schunk_gripper_communication::schunk_gripper::Response &res)
+   {
+   res.motorvalue = req.motorvalue;
+   res.pythonfile = req.pythonfile;
+   res.pythonfunction = req.pythonfunction;
+   ROS_INFO("Setting motor value to %f", (double)res.motorvalue);
+   ROS_INFO("Completed motor movement - returning.");
+   return true;
+   }
+
+   bool set_motor(schunk_gripper_communication::schunk_gripper::Request &req,
+   schunk_gripper_communication::schunk_gripper::Response &res)
+   {
+
+//python here
+PyObject *pName, *pModule, *pDict, *pFunc;
+PyObject *pArgs, *pValue;
+int i;
+
+
+res.pythonfile = req.pythonfile;
+res.pythonfunction = req.pythonfunction;
+res.motorvalue = req.motorvalue;
+
+std::string pythonfile = req.pythonfile;
+std::string pythonfunction = req.pythonfunction;
+
+ROS_INFO("Setting motor value to %f", (double)res.motorvalue);
+
+setenv("PYTHONPATH",".",1);
+
+Py_Initialize();
+pName = PyString_FromString(((std::string)res.pythonfile).c_str());
+pModule = PyImport_Import(pName);
+Py_DECREF(pName);
+
+if (pModule != NULL) {
+pFunc = PyObject_GetAttrString(pModule, ((std::string)res.pythonfunction).c_str());
+
+if (pFunc && PyCallable_Check(pFunc)) {
+pArgs = PyTuple_New(1); //num of args intended to pass to function
+pValue = PyFloat_FromDouble((double)res.motorvalue);
+PyTuple_SetItem(pArgs, 0, pValue);
+pValue = PyObject_CallObject(pFunc, pArgs);
+Py_DECREF(pArgs);
+if (pValue != NULL) {
+printf("Result of call: %ld\n", PyInt_AsLong(pValue));
+Py_DECREF(pValue);
 }
+else {
+Py_DECREF(pFunc);
+Py_DECREF(pModule);
+PyErr_Print();
+fprintf(stderr,"Call failed\n");
+return false;
+}
+}
+else {
+if (PyErr_Occurred())
+PyErr_Print();
+fprintf(stderr, "Cannot find function\n");
+}
+Py_XDECREF(pFunc);
+Py_DECREF(pModule);
+} else {
+PyErr_Print();
+fprintf(stderr, "Failed to load python file\n");
+return false;
+}
+Py_Finalize();
 
-bool set_motor(schunk_gripper_communication::schunk_gripper::Request &req,
-               schunk_gripper_communication::schunk_gripper::Response &res)
-{
-   
-    //python here
-    PyObject *pName, *pModule, *pDict, *pFunc;
-    PyObject *pArgs, *pValue;
-    int i;
 
-    
-    res.pythonfile = req.pythonfile;
-    res.pythonfunction = req.pythonfunction;
-    res.motorvalue = req.motorvalue;
-   
-    std::string pythonfile = req.pythonfile;
-    std::string pythonfunction = req.pythonfunction;
+ROS_INFO("Completed motor movement - returning.");
 
-    ROS_INFO("Setting motor value to %f", (double)res.motorvalue);
-
-    setenv("PYTHONPATH",".",1);
-
-    Py_Initialize();
-    pName = PyString_FromString(((std::string)res.pythonfile).c_str());
-    pModule = PyImport_Import(pName);
-    Py_DECREF(pName);
-
-    if (pModule != NULL) {
-        pFunc = PyObject_GetAttrString(pModule, ((std::string)res.pythonfunction).c_str());
-
-        if (pFunc && PyCallable_Check(pFunc)) {
-            pArgs = PyTuple_New(1); //num of args intended to pass to function
-            pValue = PyFloat_FromDouble((double)res.motorvalue);
-            PyTuple_SetItem(pArgs, 0, pValue);
-            pValue = PyObject_CallObject(pFunc, pArgs);
-            Py_DECREF(pArgs);
-            if (pValue != NULL) {
-                printf("Result of call: %ld\n", PyInt_AsLong(pValue));
-                Py_DECREF(pValue);
-            }
-            else {
-                Py_DECREF(pFunc);
-                Py_DECREF(pModule);
-                PyErr_Print();
-                fprintf(stderr,"Call failed\n");
-                return false;
-            }
-        }
-        else {
-            if (PyErr_Occurred())
-                PyErr_Print();
-            fprintf(stderr, "Cannot find function\n");
-        }
-        Py_XDECREF(pFunc);
-        Py_DECREF(pModule);
-    } else {
-        PyErr_Print();
-        fprintf(stderr, "Failed to load python file\n");
-        return false;
-    }
-    Py_Finalize();
-    
-
-    ROS_INFO("Completed motor movement - returning.");
-    
-    return true;
+return true;
 }
 */
 

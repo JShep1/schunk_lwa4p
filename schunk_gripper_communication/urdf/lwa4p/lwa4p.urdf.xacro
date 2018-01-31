@@ -336,7 +336,7 @@
     -->
     
     <joint name="gripper_joint" type="fixed" >
-        <origin xyz="0 0 0.32" rpy="0 0 0" />
+        <origin xyz="0 0 0.27" rpy="0 0 0" />
         <parent link="${name}_6_link" />
       <child link="gripper_link" />
     </joint>
@@ -349,17 +349,17 @@
       </inertial>
 
        <visual>
-        <origin xyz="0 0 -0.17" rpy="0 0 0" />
+        <origin xyz="0 0 -0.15" rpy="0 0 0" />
         <geometry>
-            <box size="0.1 0.1 0.13" />
+            <box size="0.1 0.1 0.10" />
         </geometry>
         <material name="Schunk/Yellow" />
       </visual>
 
       <collision>
-        <origin xyz="0 0 -0.17" rpy="0 0 0" />
+        <origin xyz="0 0 -0.15" rpy="0 0 0" />
         <geometry>
-            <box size="0.1 0.1 0.13" />
+            <box size="0.1 0.1 0.10" />
         </geometry>
       </collision>
      </link>

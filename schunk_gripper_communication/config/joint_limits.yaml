@@ -8,6 +8,9 @@ joint_limits:
     has_acceleration_limits: false
     max_acceleration: 0
   arm_2_joint:
+    has_position_limits: true
+    min_position: -1.5 # so arm won't go under table
+    max_position: 1.5
     has_velocity_limits: true
     max_velocity: 1.25
     has_acceleration_limits: false

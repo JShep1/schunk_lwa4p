@@ -35,6 +35,8 @@ find_package(catkin REQUIRED COMPONENTS
   std_srvs
   tf
   urdf
+  trac_ik_kinematics_plugin
+  trac_ik_lib
 )
 
 add_definitions( ${icl_hardware_can_DEFINITIONS} )
