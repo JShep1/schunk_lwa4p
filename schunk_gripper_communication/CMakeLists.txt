@@ -213,6 +213,8 @@ target_link_libraries(schunk_gripper_communication_node
     ${catkin_LIBRARIES}
 )
 
+
+
 add_executable(schunk_gripper_communication_move_home_node
     src/MoveToHomeNode.cpp
     )
@@ -229,7 +231,9 @@ target_link_libraries(schunk_gripper_communication_move_home_node
 
 
 add_executable(schunk_gripper_server 
-    src/schunk_gripper_server.cpp)
+    src/schunk_gripper_server.cpp
+    src/set_schunk.cpp
+    )
 
 target_link_libraries(schunk_gripper_server 
     ${catkin_LIBRARIES} 
@@ -239,7 +243,9 @@ target_link_libraries(schunk_gripper_server
 add_dependencies(schunk_gripper_server 
     schunk_gripper_communication_gencpp)
 add_executable(schunk_gripper_client 
-    src/schunk_gripper_client.cpp)
+    src/schunk_gripper_client.cpp
+    src/set_schunk.cpp
+    )
 
 target_link_libraries(schunk_gripper_client 
     ${catkin_LIBRARIES} 

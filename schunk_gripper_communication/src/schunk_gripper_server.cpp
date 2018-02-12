@@ -17,9 +17,15 @@
 #include <tf/transform_broadcaster.h>
 #include <moveit/collision_detection/collision_common.h>
 #include <Eigen/Geometry>
-
+#include <schunk/set_schunk.h>
 
 //#include <planning_scene_interface.h>
+
+bool init_schunk(){
+    Schunk schunk;
+    schunk.initialize();
+    return true;
+}
 
 bool set_motor(double motorvalue)
 {
@@ -32,9 +38,11 @@ bool set_motor(double motorvalue)
     strcat(str1, str);
     strcat(str1, "\nprint motorvalue \n");
     ROS_INFO("Running Python Script");
+    
     Py_Initialize();
     PyRun_SimpleString(str1);
     Py_Finalize();
+    
     ROS_INFO("Python Script Complete");
 
     ROS_INFO("Setting motor value to %f", motorvalue);
@@ -120,7 +128,8 @@ bool create_matrix(double x, double y, double z, double rot_x,
 
 
 bool plan_motion(){
-    
+   
+
     ROS_INFO("Motion planning in progress.");
     //declare the movegroup to be planned for
     moveit::planning_interface::MoveGroup group("Arm");
@@ -161,6 +170,7 @@ bool plan_motion(){
     attached_object.object.header.frame_id = "base_link";
 
     attached_object.object.id = "box";
+    group.setStartState(*group.getCurrentState());
     double box_x = 0.5;
     double box_y = 0.5;
     double box_z = 0.5;
@@ -353,11 +363,18 @@ bool plan_motion(){
         display_publisher.publish(display_trajectory);
         sleep(5.0);
     }
+
     if(1){
         group.execute(my_plan);
     }
 
 
+    group.setStartState(*group.getCurrentState());
+    if(1){
+        //visualize the created motion plan
+        display_trajectory.trajectory.clear();
+        display_publisher.publish(display_trajectory);
+    }
 
     sleep(5.0);
 
@@ -481,6 +498,7 @@ bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
     std::string function_1 = "set_motor";
     std::string function_2 = "plan_motion";
     std::string function_3 = "execute_motion";
+    std::string function_4 = "init_schunk";
     if(!function_1.compare((std::string)req.function_name)){
         ROS_INFO("Found function set_motor");
         if(set_motor(res.motorvalue)){
@@ -500,9 +518,21 @@ bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
             return false;
         }
 
-    } else if(!function_3.compare((std::string)req.function_name)){
+    } 
+    else if(!function_3.compare((std::string)req.function_name)){
         ROS_INFO("Found function execute_motion");
         if(execute_motion()){
+            ROS_INFO("Successfully executed motion.");
+            return true;
+        }else{
+            ROS_ERROR("Could not execute motion. Returning.");
+            return false;
+        }
+
+    }
+    else if(!function_4.compare((std::string)req.function_name)){
+        ROS_INFO("Found function init_schunk");
+        if(init_schunk()){
             ROS_INFO("Successfully executed motion.");
             return true;
         }else{

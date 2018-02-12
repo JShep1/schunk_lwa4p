@@ -22,13 +22,17 @@ int main(int argc, char **argv)
     
     //ROS_INFO("input: %s %s %f",srv.request.pythonfile, srv.request.pythonfunction,(double)srv.request.motorvalue);
 
-    if (client.call(srv)){
-        ROS_INFO("Function %s executed successfully", srv.request.function_name.c_str());
-    }else{
-        ROS_ERROR("Function %s failed to execute", srv.request.function_name.c_str());
-        return 1;
-    }
+    while(1){
+        if (client.call(srv)){
+            ROS_INFO("Function %s executed successfully", srv.request.function_name.c_str());
+            break;
+        }else{
+            ROS_ERROR("Function %s failed to execute", srv.request.function_name.c_str());
+            ROS_INFO("Calling function %s again", srv.request.function_name.c_str());
 
+            continue;
+        }
+    }
     return 0;
 
 }
