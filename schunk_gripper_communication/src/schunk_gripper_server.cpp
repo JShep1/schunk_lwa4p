@@ -18,11 +18,12 @@
 #include <moveit/collision_detection/collision_common.h>
 #include <Eigen/Geometry>
 #include <schunk/set_schunk.h>
+#include <sensor_msgs/JointState.h>
 
 //#include <planning_scene_interface.h>
+Schunk schunk;
 
 bool init_schunk(){
-    Schunk schunk;
     schunk.initialize();
     return true;
 }
