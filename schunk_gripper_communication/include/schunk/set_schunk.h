@@ -36,19 +36,30 @@ class Schunk{
         bool execute_motion();
         void display_trajectory();
         void jointStatesCallback(std::vector<double> joint_values);
-        void add_object(moveit_msgs::AttachedCollisionObject object);
-        void remove_object(int index, std::string id);
-        moveit_msgs::AttachedCollisionObject create_box(double size, geometry_msgs::Pose pose);
+        void add_object_to_world(moveit_msgs::CollisionObject object, int index);
+        void remove_object_from_world(int index);
+        void add_object_to_robot(int index);
+        void remove_object_from_robot(int index);
+        void randomize_joint_values();
+        void print_joint_values(); 
+        void reset_joint_values();
+        void reset_trajectory();
 
-        geometry_msgs::Pose before_eef_pose;
-        geometry_msgs::Pose eef_pose;
-        geometry_msgs::Pose after_eef_pose;
+        geometry_msgs::Pose create_pose(double x, double y, double z, double w); 
+
+        moveit_msgs::CollisionObject create_box(std::string id, double size, geometry_msgs::Pose pose);
+
+        geometry_msgs::Pose before_eef_pose_;
+        geometry_msgs::Pose eef_pose_;
+        geometry_msgs::Pose after_eef_pose_;
+        std::vector<double> joint_values_;
 
         std::vector<geometry_msgs::Pose> poses;
         std::vector<double> delays;
-        std::vector<moveit_msgs::AttachedCollisionObject> attached_objects;
-        std::vector<moveit_msgs::CollisionObject> remove_objects;
+        //std::vector<moveit_msgs::AttachedCollisionObject> attached_objects;
+        std::vector<moveit_msgs::CollisionObject> collision_objects;
 
+        Schunk(ros::NodeHandle* nodehandle);
         Schunk();
 
         ~Schunk();
@@ -56,6 +67,9 @@ class Schunk{
         void initialize();
 
     private:
+        void set_eef();
+        trajectory_msgs::JointTrajectoryPointPtr create_traj_point(std::vector<double> joint_values, double time);
+
         ros::Subscriber joint_states_sub_;
         ros::NodeHandle node_handle;
         ros::Publisher display_publisher_;
@@ -67,7 +81,6 @@ class Schunk{
         robot_model::RobotModelPtr robot_model_;
         robot_state::RobotStatePtr kinematic_state_;
         const robot_state::JointModelGroup* joint_model_group_;
-        std::vector<double> joint_values_;
         std::vector<std::string> joint_names_;    
 
 
@@ -79,7 +92,6 @@ class Schunk{
         moveit_msgs::DisplayTrajectory display_trajectory_;
         moveit::planning_interface::MoveGroup::Plan plan_;
 
-        trajectory_msgs::JointTrajectoryPointPtr create_traj_point(std::vector<double> joint_values, double time);
 
 };
 

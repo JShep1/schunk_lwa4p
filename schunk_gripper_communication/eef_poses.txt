@@ -1,0 +1,91 @@
+eef #0
+[ INFO] [1521912094.861915371]: schunk's after eef position: -0.165392 0.0612717 0.195428
+[ INFO] [1521912094.862122668]: schunk's after eef orientation: 0.0194844 0.0390237 -0.981538 0.18623
+[ INFO] [1521912094.862339401]: Joint table_base_joint: 2.757408
+[ INFO] [1521912094.862562171]: Joint arm_0_joint: -0.066380
+[ INFO] [1521912094.862767102]: Joint arm_1_joint: 2.546423
+[ INFO] [1521912094.862969195]: Joint arm_2_joint: -0.173496
+[ INFO] [1521912094.863230877]: Joint arm_3_joint: -2.615744
+[ INFO] [1521912094.863419082]: Joint arm_4_joint: -2.532429
+eef #1
+[ INFO] [1521912094.865297278]: schunk's after eef position: -0.156299 -0.240472 -0.0134313
+[ INFO] [1521912094.865539203]: schunk's after eef orientation: -0.855261 -0.0732778 -0.442284 0.25989
+[ INFO] [1521912094.865730429]: Joint table_base_joint: -2.130264
+[ INFO] [1521912094.865918805]: Joint arm_0_joint: -1.026236
+[ INFO] [1521912094.866117678]: Joint arm_1_joint: 2.149967
+[ INFO] [1521912094.866304722]: Joint arm_2_joint: -2.739493
+[ INFO] [1521912094.866489553]: Joint arm_3_joint: -1.045425
+[ INFO] [1521912094.866674939]: Joint arm_4_joint: 0.430414
+eef #2
+[ INFO] [1521912094.869142965]: schunk's after eef position: -0.184227 -0.486527 0.357295
+[ INFO] [1521912094.869337315]: schunk's after eef orientation: 0.496264 0.0270011 -0.828965 0.256535
+[ INFO] [1521912094.869523750]: Joint table_base_joint: -1.926271
+[ INFO] [1521912094.869720920]: Joint arm_0_joint: -0.666794
+[ INFO] [1521912094.869907895]: Joint arm_1_joint: 0.981837
+[ INFO] [1521912094.870088931]: Joint arm_2_joint: -2.268270
+[ INFO] [1521912094.870269810]: Joint arm_3_joint: 1.022597
+[ INFO] [1521912094.870466374]: Joint arm_4_joint: -0.842712
+eef #3
+[ INFO] [1521912094.871751354]: schunk's after eef position: -0.0245404 -0.140374 0.240027
+[ INFO] [1521912094.872638623]: schunk's after eef orientation: 0.155092 -0.477688 -0.728523 0.465848
+[ INFO] [1521912094.872962768]: Joint table_base_joint: -1.746368
+[ INFO] [1521912094.873105812]: Joint arm_0_joint: 0.223369
+[ INFO] [1521912094.873239608]: Joint arm_1_joint: 2.576482
+[ INFO] [1521912094.873402121]: Joint arm_2_joint: 1.503142
+[ INFO] [1521912094.873531789]: Joint arm_3_joint: -2.280145
+[ INFO] [1521912094.873706882]: Joint arm_4_joint: -2.268067
+eef #4
+[ INFO] [1521912094.875482649]: schunk's after eef position: -0.103488 -0.574829 0.135241
+[ INFO] [1521912094.875651446]: schunk's after eef orientation: -0.754923 0.159023 -0.0143688 0.636079
+[ INFO] [1521912094.875806424]: Joint table_base_joint: -1.757911
+[ INFO] [1521912094.875931913]: Joint arm_0_joint: -1.093292
+[ INFO] [1521912094.876055647]: Joint arm_1_joint: 0.939441
+[ INFO] [1521912094.884399828]: Joint arm_2_joint: 0.069501
+[ INFO] [1521912094.884620175]: Joint arm_3_joint: 2.486751
+[ INFO] [1521912094.885694435]: Joint arm_4_joint: -1.322403
+eef #5
+[ INFO] [1521912094.886861992]: schunk's after eef position: -0.311367 0.0483567 0.301496
+[ INFO] [1521912094.887349650]: schunk's after eef orientation: -0.567824 -0.314036 -0.69773 0.303528
+[ INFO] [1521912094.888655888]: Joint table_base_joint: -0.155892
+[ INFO] [1521912094.888799038]: Joint arm_0_joint: 0.149508
+[ INFO] [1521912094.888917472]: Joint arm_1_joint: -1.935616
+[ INFO] [1521912094.889032098]: Joint arm_2_joint: 1.680138
+[ INFO] [1521912094.889172800]: Joint arm_3_joint: 2.082178
+[ INFO] [1521912094.889288913]: Joint arm_4_joint: 1.978363
+eef #6
+[ INFO] [1521912094.892564906]: schunk's after eef position: 0.0205171 0.204283 0.22552
+[ INFO] [1521912094.892932635]: schunk's after eef orientation: -0.3231 0.175645 0.818722 0.440965
+[ INFO] [1521912094.893153975]: Joint table_base_joint: 1.493873
+[ INFO] [1521912094.893360422]: Joint arm_0_joint: -0.028638
+[ INFO] [1521912094.893674196]: Joint arm_1_joint: 2.425710
+[ INFO] [1521912094.893970497]: Joint arm_2_joint: 2.699851
+[ INFO] [1521912094.894289131]: Joint arm_3_joint: 1.792595
+[ INFO] [1521912094.894518476]: Joint arm_4_joint: 0.411629
+eef #7
+[ INFO] [1521912094.896637775]: schunk's after eef position: 0.397248 0.100492 0.607036
+[ INFO] [1521912094.896861103]: schunk's after eef orientation: -0.581896 -0.39408 -0.138875 0.697719
+[ INFO] [1521912094.897399232]: Joint table_base_joint: 0.245961
+[ INFO] [1521912094.897661617]: Joint arm_0_joint: -0.859701
+[ INFO] [1521912094.897946989]: Joint arm_1_joint: -0.382981
+[ INFO] [1521912094.898152226]: Joint arm_2_joint: -1.429211
+[ INFO] [1521912094.898355648]: Joint arm_3_joint: -1.629852
+[ INFO] [1521912094.898619811]: Joint arm_4_joint: -2.834154
+eef #8
+[ INFO] [1521912094.899842720]: schunk's after eef position: 0.259898 -0.300442 0.565532
+[ INFO] [1521912094.900287959]: schunk's after eef orientation: 0.403969 0.889073 0.186597 0.107425
+[ INFO] [1521912094.900417544]: Joint table_base_joint: -0.865448
+[ INFO] [1521912094.900536979]: Joint arm_0_joint: -1.085102
+[ INFO] [1521912094.900665866]: Joint arm_1_joint: -0.779471
+[ INFO] [1521912094.900788626]: Joint arm_2_joint: 0.939475
+[ INFO] [1521912094.900903494]: Joint arm_3_joint: 2.595759
+[ INFO] [1521912094.901018464]: Joint arm_4_joint: -2.282451
+eef #9
+[ INFO] [1521912094.902138379]: schunk's after eef position: -0.299929 -0.263899 -0.105556
+[ INFO] [1521912094.902257581]: schunk's after eef orientation: -0.141793 -0.739894 0.264415 0.602111
+[ INFO] [1521912094.902376277]: Joint table_base_joint: 0.732943
+[ INFO] [1521912094.902492524]: Joint arm_0_joint: 1.329677
+[ INFO] [1521912094.902607682]: Joint arm_1_joint: -1.606497
+[ INFO] [1521912094.902727871]: Joint arm_2_joint: 0.531923
+[ INFO] [1521912094.902859094]: Joint arm_3_joint: 1.256870
+[ INFO] [1521912094.902975778]: Joint arm_4_joint: -2.643048
+

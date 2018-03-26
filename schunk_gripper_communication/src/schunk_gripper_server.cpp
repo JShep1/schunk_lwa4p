@@ -21,12 +21,15 @@
 #include <sensor_msgs/JointState.h>
 
 //#include <planning_scene_interface.h>
-Schunk schunk;
+//Schunk schunk;
+boost::shared_ptr<Schunk> schunk;
+
 
 bool init_schunk(){
-    schunk.initialize();
     return true;
 }
+
+
 
 bool set_motor(double motorvalue)
 {
@@ -127,7 +130,7 @@ bool create_matrix(double x, double y, double z, double rot_x,
     return true;
 }
 
-
+/*
 bool plan_motion(){
    
 
@@ -201,31 +204,28 @@ bool plan_motion(){
     moveit_planning_scene.is_diff = true;
     planning_scene_diff_publisher.publish(moveit_planning_scene);
     //sleep_time.sleep();
-/*
-    ros::ServiceClient planning_scene_diff_client = node_handle.serviceClient<moveit_msgs::ApplyPlanningScene>("apply_planning_scene");
-    planning_scene_diff_client.waitForExistence();
 
-    moveit_msgs::ApplyPlanningScene srv;
-    srv.request.scene = planning_scene;
-    planning_scene_diff_client.call(srv);
-*/
+    //ros::ServiceClient planning_scene_diff_client = node_handle.serviceClient<moveit_msgs::ApplyPlanningScene>("apply_planning_scene");
+    //planning_scene_diff_client.waitForExistence();
+
+    //moveit_msgs::ApplyPlanningScene srv;
+    //srv.request.scene = planning_scene;
+    //planning_scene_diff_client.call(srv);
+
     //Output info to make sure everything's loaded and good
     ROS_INFO("Reference frame: %s.", group.getPlanningFrame().c_str());
     ROS_INFO("EE link: %s.", group.getEndEffectorLink().c_str());
     //group.setPlannerId("RRTConnectkConfigDefault");
-/* 
-*/
+
     
     //get current state of joints and modify one for easy motion plan testing
 
-/*
-*/ 
-    /*
-    std::vector<double> group_variable_values;
-    group.getCurrentState()->copyJointGroupPositions(group.getCurrentState()->getRobotModel()->getJointModelGroup(group.getName()), group_variable_values);
-    group_variable_values[0] = -1.0;
-    group.setJointValueTarget(group_variable_values);
-    */
+    
+    //std::vector<double> group_variable_values;
+    //group.getCurrentState()->copyJointGroupPositions(group.getCurrentState()->getRobotModel()->getJointModelGroup(group.getName()), group_variable_values);
+    //group_variable_values[0] = -1.0;
+    //group.setJointValueTarget(group_variable_values);
+    
     //load the robot model 
     robot_model_loader::RobotModelLoader robot_model_loader("robot_description");
     robot_model::RobotModelPtr kinematic_model = robot_model_loader.getModel();
@@ -244,33 +244,33 @@ bool plan_motion(){
     kinematic_state->copyJointGroupPositions(joint_model_group, joint_values);
 
     //print out the joint values for testing
-/*
-    std::vector<double> joint_values;
-    kinematic_state->copyJointGroupPositions(joint_model_group, joint_values);
-    for(std::size_t i = 0; i < joint_names.size(); i++){
-        ROS_INFO("Joint %s: %f", joint_names[i].c_str(), joint_values[i]);
-    }
-*/
+
+    //std::vector<double> joint_values;
+    //kinematic_state->copyJointGroupPositions(joint_model_group, joint_values);
+    //for(std::size_t i = 0; i < joint_names.size(); i++){
+    //    ROS_INFO("Joint %s: %f", joint_names[i].c_str(), joint_values[i]);
+    //}
+
     //enforce the joint limits for the currentstate
     kinematic_state->enforceBounds();
 
     //set the kinematic state to random to test forward kinematics
     //fk: random pose of arm -> eef pose
-  /*
-    kinematic_state->setToRandomPositions(joint_model_group);
-    const Eigen::Affine3d &end_effector_state = kinematic_state->getGlobalLinkTransform("arm_6_link");
-    ROS_INFO_STREAM("Translation: " << end_effector_state.translation());
-    ROS_INFO_STREAM("Rotation: " << end_effector_state.rotation());
-*/
-/*
+  
+    //kinematic_state->setToRandomPositions(joint_model_group);
+    //const Eigen::Affine3d &end_effector_state = kinematic_state->getGlobalLinkTransform("arm_6_link");
+    //ROS_INFO_STREAM("Translation: " << end_effector_state.translation());
+    //ROS_INFO_STREAM("Rotation: " << end_effector_state.rotation());
+
+
     //find the inverse kinematics
     //ik: random pose of eef -> pose of arm
-  */
+  
     //const Eigen::Affine3d &end_effector_state = kinematic_state->getGlobalLinkTransform("gripper_link");
     //
 
-    /*
-    */
+    
+    
 
     Eigen::Affine3d m;
     create_matrix(box_x,box_y,box_z,1,1,1,m);
@@ -281,13 +281,13 @@ bool plan_motion(){
     const Eigen::Affine3d &end_effector_state = m;
 
     bool found_ik = true;//kinematic_state->setFromIK(joint_model_group, end_effector_state, 10, 0.1);
-    /*
-    geometry_msgs::Pose target_pose1;
-    target_pose1.orientation.w = 1.0;
-    target_pose1.position.x = box_x;
-    target_pose1.position.y = box_y;
-    target_pose1.position.z = box_z;
-    */
+    
+    //geometry_msgs::Pose target_pose1;
+    //target_pose1.orientation.w = 1.0;
+    //target_pose1.position.x = box_x;
+    //target_pose1.position.y = box_y;
+    //target_pose1.position.z = box_z;
+    
       //TODO figure out constraints
     //planning_interface::MotionPlanRequest req;
 
@@ -299,14 +299,14 @@ bool plan_motion(){
     group.getCurrentState()->copyJointGroupPositions(group.getCurrentState()->getRobotModel()->getJointModelGroup(group.getName()), group_variable_values);
     //group_variable_values[0] = 0;
     //group_variable_values[1] = 1.5;
-    unsigned int planner_count = 0;
+    //unsigned int planner_count = 0;
     //while (true){
-    /*
-        if(planner_count >= planners.size()){
-        ROS_INFO("All planners attempted and no solution found.");
-        break;
-    }
-    */
+    
+    //    if(planner_count >= planners.size()){
+    //    ROS_INFO("All planners attempted and no solution found.");
+    //    break;
+    //}
+    
     //group.setPlannerId(planners[planner_count]);
     //planner_count++;
     found_ik = kinematic_state->setFromIK(joint_model_group, end_effector_state, 10, 0.1);
@@ -320,14 +320,14 @@ bool plan_motion(){
                 group_variable_values[i] = joint_values[i];
 //            }
         }
-      /*  if(group_variable_values[1] > 1.5 || group_variable_values[1] < -1.5){
-           //ROS_INFO("IK solution found to be invalid. Trying again.");
-           continue;
-        }else{
-           //ROS_INFO("IK solution found to be valid.");
-            break;
-        }
-        */
+     //  if(group_variable_values[1] > 1.5 || group_variable_values[1] < -1.5){
+     //      //ROS_INFO("IK solution found to be invalid. Trying again.");
+     //      continue;
+     //   }else{
+     //      //ROS_INFO("IK solution found to be valid.");
+     //       break;
+     //   }
+        
     }else{
          ROS_INFO("Did not find IK solution.");
         //continue;
@@ -336,23 +336,22 @@ bool plan_motion(){
     group.setJointValueTarget(group_variable_values);
 
     //instantiate a motion plan and plan for it with the Arm group
-    /*
-       target_pose1.orientation.w = 1.0;
-       target_pose1.position.x = 0.58;
-       target_pose1.position.y = -0.7;
-       target_pose1.position.z = 1.0;
-       */
+    
+       //target_pose1.orientation.w = 1.0;
+       //target_pose1.position.x = 0.58;
+       //target_pose1.position.y = -0.7;
+       //target_pose1.position.z = 1.0;
+       
 
 
-    /*
-       tf::poseEigenToMsg(end_effector_state, target_pose1);
-       */
-    /*
-    */
+    
+    //   tf::poseEigenToMsg(end_effector_state, target_pose1);
+       
+    
+    
 
-    /*
-       group.setPoseTarget(target_pose1);
-       */
+       //group.setPoseTarget(target_pose1);
+       
     group.setPlanningTime(10.0);
     bool success = group.plan(my_plan);
     sleep(5.0);
@@ -387,8 +386,6 @@ bool plan_motion(){
     ROS_INFO_STREAM("Current state is "
             <<(collision_result.collision ? "in" : "not in")
             << " self collision");
-/*
-*/
     moveit_msgs::CollisionObject remove_object;
     remove_object.id = "box";
     remove_object.header.frame_id = "base_link";
@@ -403,89 +400,34 @@ bool plan_motion(){
     planning_scene_diff_publisher.publish(moveit_planning_scene);
 
 
-/* Item picked - begin to place
- *
- *
- */
-  /*
-    kinematic_model = robot_model_loader.getModel();
-    planning_scene::PlanningScene planning_scene_two(kinematic_model);
-
-    //print out the frame of the robot model to test
-    ROS_INFO("Model frame: %s", kinematic_model->getModelFrame().c_str());
-
-    //get the joint model group which represents the robot model for 
-    //the Arm group
-    robot_state::RobotStatePtr kinematic_state_two(new robot_state::RobotState(kinematic_model));
-    moveit::planning_interface::MoveGroup group_two("Arm");
-    kinematic_state_two->setToDefaultValues();
-    const robot_state::JointModelGroup* joint_model_group_two = kinematic_model->getJointModelGroup("Arm");
-    const std::vector<std::string> &joint_names_two = joint_model_group_two->getJointModelNames();
-    std::vector<double> joint_values_two;
-    kinematic_state_two->copyJointGroupPositions(joint_model_group_two, joint_values_two);
-
-    //print out the joint values for testing
-//
-    std::vector<double> joint_values;
-    kinematic_state->copyJointGroupPositions(joint_model_group, joint_values);
-    for(std::size_t i = 0; i < joint_names.size(); i++){
-        ROS_INFO("Joint %s: %f", joint_names[i].c_str(), joint_values[i]);
-    }
-//
-    //enforce the joint limits for the currentstate
-    kinematic_state_two->enforceBounds();
-
-    //group.setStartState(*group.getCurrentState());
-    Eigen::Affine3d end_mat;
-    create_matrix(box_x-0.1,box_y-0.1,box_z-0.1,1,1,1,end_mat);
-
-    const Eigen::Affine3d &end_effector_end_state = m;
-
-    found_ik = kinematic_state_two->setFromIK(joint_model_group_two, end_effector_end_state, 10, 0.1);
-
-    if(found_ik){
-        kinematic_state->copyJointGroupPositions(joint_model_group_two, joint_values_two);
-        ROS_INFO("Found possible IK solution for 2nd scenario:");
-        for(std::size_t i = 0; i < joint_names_two.size(); i++){
-            ROS_INFO("Joint %s: %f", joint_names_two[i].c_str(), joint_values_two[i]);
-            if(i < 6){
-                group_variable_values[i] = joint_values_two[i];
-            }
-        }
-    //    if(group_variable_values[1] > 1.5 || group_variable_values[1] < -1.5){
-           //ROS_INFO("IK solution found to be invalid. Trying again.");
-           continue;
-        }else{
-           //ROS_INFO("IK solution found to be valid.");
-            break;
-        }
-  //      
-    }else{
-         ROS_INFO("Did not find IK solution.");
-        //continue;
-    }
-    //}
-    group_two.setJointValueTarget(group_variable_values);
-    moveit::planning_interface::MoveGroup::Plan my_plan_two;
-    
-    success = group_two.plan(my_plan_two);
-    sleep(5.0);
-    display_trajectory.trajectory.clear();
-    if(1){
-        //visualize the created motion plan
-        ROS_INFO("Visualizing plan 2 (item place goal) %s",success?"":"FAILED");
-        display_trajectory.trajectory_start = my_plan_two.start_state_;
-        display_trajectory.trajectory.push_back(my_plan_two.trajectory_);
-        display_publisher.publish(display_trajectory);
-        sleep(5.0);
-    }
-    if(1){
-        group_two.execute(my_plan_two);
-    }
-*/
-
     return true;
 }
+*/
+
+bool plan_motion(){
+    /*
+    //TODO generate random eef pose and plan for schunk
+    schunk.print_pose(schunk.eef_pose_, "schunk's before eef");
+    schunk.print_joint_values();
+    schunk.randomize_joint_values();
+    //std::cout << "eef #" << i << std::endl;
+    schunk.print_pose(schunk.eef_pose_, "schunk's after eef");
+    schunk.print_joint_values();
+        
+    geometry_msgs::Pose ik_eef_pose = schunk.create_pose(schunk.eef_pose_.position.x,schunk.eef_pose_.position.y,schunk.eef_pose_.position.z,schunk.eef_pose_.orientation.w);
+        
+    schunk.reset_joint_values();
+    if(schunk.plan_motion(ik_eef_pose)){
+        std::cout << "Found motion plan" << std::endl;
+        //schunk.execute_motion();
+    }
+    else{
+        std::cout << "No found motion plan" <<std::endl;
+    }
+    */
+    return true;
+}
+
 
 bool execute_motion(){
     //group.move();
@@ -533,6 +475,7 @@ bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
     }
     else if(!function_4.compare((std::string)req.function_name)){
         ROS_INFO("Found function init_schunk");
+        //Schunk schunk;
         if(init_schunk()){
             ROS_INFO("Successfully executed motion.");
             return true;
@@ -544,132 +487,77 @@ bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
     }
 
     else{
-        //std::stringstream ss;
-        //ss << (std::string)req.function_name;
-        //char str1[50];
-        //str
-        //const char* str = ss.str().c_str();
-
         ROS_ERROR("No such function: %s", req.function_name.c_str());
         return false;
     }
-    //std::string str = convertToStr<double>(&(res.motorvalue));
-    //std::cout << str << std::endl;
-    /*
-       std::stringstream ss;
-       ss << (double)req.motorvalue;
-       char str1[50];
-       const char* str = ss.str().c_str();
-       strcpy(str1, "motorvalue = ");
-       strcat(str1, str);
-       strcat(str1, "\nprint motorvalue \n");
-       ROS_INFO("Running Python Script");
-    //std::cout << str1 << std::endl;
-    //ROS_INFO("%s",((double)res.motorvalue).str().c_str());
-    Py_Initialize();
-    PyRun_SimpleString(str1);
-    //PyRun_SimpleString(ss.str());
-    Py_Finalize();
-    ROS_INFO("Python Script Complete");
-
-    ROS_INFO("Setting motor value to %f", (double)res.motorvalue);
-    ROS_INFO("Completed motor movement - returning.");
-    */
     return true;
 }
 
-
-
-
-/*
-
-   bool set_motor(schunk_gripper_communication::schunk_gripper::Request &req,
-   schunk_gripper_communication::schunk_gripper::Response &res)
-   {
-   res.motorvalue = req.motorvalue;
-   res.pythonfile = req.pythonfile;
-   res.pythonfunction = req.pythonfunction;
-   ROS_INFO("Setting motor value to %f", (double)res.motorvalue);
-   ROS_INFO("Completed motor movement - returning.");
-   return true;
-   }
-
-   bool set_motor(schunk_gripper_communication::schunk_gripper::Request &req,
-   schunk_gripper_communication::schunk_gripper::Response &res)
-   {
-
-//python here
-PyObject *pName, *pModule, *pDict, *pFunc;
-PyObject *pArgs, *pValue;
-int i;
-
-
-res.pythonfile = req.pythonfile;
-res.pythonfunction = req.pythonfunction;
-res.motorvalue = req.motorvalue;
-
-std::string pythonfile = req.pythonfile;
-std::string pythonfunction = req.pythonfunction;
-
-ROS_INFO("Setting motor value to %f", (double)res.motorvalue);
-
-setenv("PYTHONPATH",".",1);
-
-Py_Initialize();
-pName = PyString_FromString(((std::string)res.pythonfile).c_str());
-pModule = PyImport_Import(pName);
-Py_DECREF(pName);
-
-if (pModule != NULL) {
-pFunc = PyObject_GetAttrString(pModule, ((std::string)res.pythonfunction).c_str());
-
-if (pFunc && PyCallable_Check(pFunc)) {
-pArgs = PyTuple_New(1); //num of args intended to pass to function
-pValue = PyFloat_FromDouble((double)res.motorvalue);
-PyTuple_SetItem(pArgs, 0, pValue);
-pValue = PyObject_CallObject(pFunc, pArgs);
-Py_DECREF(pArgs);
-if (pValue != NULL) {
-printf("Result of call: %ld\n", PyInt_AsLong(pValue));
-Py_DECREF(pValue);
-}
-else {
-Py_DECREF(pFunc);
-Py_DECREF(pModule);
-PyErr_Print();
-fprintf(stderr,"Call failed\n");
-return false;
-}
-}
-else {
-if (PyErr_Occurred())
-PyErr_Print();
-fprintf(stderr, "Cannot find function\n");
-}
-Py_XDECREF(pFunc);
-Py_DECREF(pModule);
-} else {
-PyErr_Print();
-fprintf(stderr, "Failed to load python file\n");
-return false;
-}
-Py_Finalize();
-
-
-ROS_INFO("Completed motor movement - returning.");
-
-return true;
-}
-*/
 
 
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "schunk_gripper_server");
     ros::NodeHandle n;
+    schunk.reset(new Schunk(&n));
+    //Schunk schunk(&n);
+    //(&schunk)->~Schunk();
+    //new (&schunk) Schunk(&n); 
+    
+    geometry_msgs::Pose eef_pose = schunk->create_pose(1,1,1,1);
+    schunk->print_pose(eef_pose, "eef from main");
+    //sleep(7.0);
+    
 
+    /*
+    for(int i = 0; i < 10; i++){ 
+        schunk.print_pose(schunk.eef_pose_, "schunk's before eef");
+        schunk.print_joint_values();
+        schunk.randomize_joint_values();
+        //std::cout << "eef #" << i << std::endl;
+        schunk.print_pose(schunk.eef_pose_, "schunk's after eef");
+        schunk.print_joint_values();
+        
+        geometry_msgs::Pose ik_eef_pose = schunk.create_pose(schunk.eef_pose_.position.x,schunk.eef_pose_.position.y,schunk.eef_pose_.position.z,schunk.eef_pose_.orientation.w);
+        
+        schunk.reset_joint_values();
+        if(schunk.plan_motion(ik_eef_pose)){
+            std::cout << "Found motion plan" << std::endl;
+            //schunk.execute_motion();
+        }
+        else{
+            std::cout << "No found motion plan" <<std::endl;
+            i--;
+        }
+
+        sleep(5.0);
+        ROS_INFO_STREAM( "----------------" << i << "------------------------");
+        if(schunk.getIK(ik_eef_pose)){
+            std::cout << "IK found with solution" <<std::endl;
+            schunk.print_joint_values();
+        }else{
+            std::cout << "IK not found" <<std::endl;
+        }
+    }
+        */
+
+    //TODO: 
+    //      DONE - Generate random joint values for each joint and get the eef pose
+    //      DONE - Get multiple eef poses and attempt to plan for each one
+    //      - start testing with plan_motion function and visualization in rviz
+    //      - make above tests into a unit test class or function
+    
+    //geometry_msgs::Pose eef_pose = schunk.create_pose(0.5, 0.5, 0.5, 1);
+    //moveit_msgs::CollisionObject box = schunk.create_box("box1", 1, eef_pose);
+    
+    //schunk.add_object_to_world(box, 0);
+        
+
+    //schunk.plan_motion(eef_pose);
+    //ROS_INFO("Planned motion");
     ros::ServiceServer service = n.advertiseService("choose_function", choose_function);
     ROS_INFO("Ready to run a function.");
     ros::spin();
     return 0;
 }
+

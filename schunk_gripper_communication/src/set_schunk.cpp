@@ -20,15 +20,23 @@
 #include <schunk/set_schunk.h>
 
 
-Schunk::Schunk()
+Schunk::Schunk(ros::NodeHandle* nodehandle):node_handle(*nodehandle)
 {
-
+    this->initialize();
 }   
+
+Schunk::Schunk(){
+
+}
 
 Schunk::~Schunk(){
 
 }
 
+void Schunk::set_eef(){
+    const Eigen::Affine3d &eef_state = kinematic_state_->getGlobalLinkTransform("arm_6_link");
+    tf::poseEigenToMsg(eef_state, eef_pose_);
+}
 
 void Schunk::initialize(){
     ROS_INFO("instantiating Schunk arm");
@@ -57,8 +65,9 @@ void Schunk::initialize(){
 
     joint_model_group_ = robot_model_->getJointModelGroup("Arm");
     joint_names_ = joint_model_group_->getJointModelNames();
-
-
+    
+    reset_joint_values();
+    //set_eef();
 
     //joint_state_group_ = kinematic_state_->getJointStateGroup("Arm");
 
@@ -84,7 +93,6 @@ void Schunk::print_pose(geometry_msgs::Pose pose, std::string info)
 }
  
 bool Schunk::getIK(geometry_msgs::Pose eef_pose){
-    std::cout << "[Schunk::getIK] got_robot_state: " << got_robot_state << std::endl;
 
     if(got_robot_state){
         //kinematic_state_->setStateValues(*robot_state_);
@@ -94,11 +102,13 @@ bool Schunk::getIK(geometry_msgs::Pose eef_pose){
         ROS_WARN("[Schunk::getIK] Using the default robot joint state NOT current");
     }
 
-    kinematic_state_->enforceBounds();
 
+    kinematic_state_->enforceBounds();
+    
     Eigen::Affine3d pose_in;
     tf::poseMsgToEigen(eef_pose, pose_in);
 
+    print_pose(eef_pose, "eef_pose");
     bool found_ik = kinematic_state_->setFromIK(joint_model_group_, pose_in, 10, 0.5);    
 
     return found_ik;
@@ -136,6 +146,7 @@ trajectory_msgs::JointTrajectoryPointPtr Schunk::create_traj_point(std::vector<d
 bool Schunk::plan_motion(geometry_msgs::Pose eef_pose){
     if(!this->getIK(eef_pose)){
         ROS_INFO("Could not find IK solution!");
+        got_plan = false;
         return false;
     }
 
@@ -148,7 +159,13 @@ bool Schunk::plan_motion(geometry_msgs::Pose eef_pose){
     
     group_->setJointValueTarget(joint_values_);
     bool success = group_->plan(plan_);
+
+    //display_trajectory();
+    
     sleep(5.0);
+
+    
+
     got_plan = success;
     return success;
 }
@@ -164,8 +181,14 @@ bool Schunk::execute_motion(){
     group_->execute(plan_);
     got_plan = false;
     group_->clearPoseTargets();
-    
+    set_eef();
+    ROS_INFO("Motion successfully executed!");
     return true;
+}
+
+void Schunk::reset_trajectory(){
+    //TODO set display_trajectory_.trajectory_start to default state
+    display_trajectory_.trajectory.clear();
 }
 
 void Schunk::display_trajectory(){
@@ -177,19 +200,59 @@ void Schunk::display_trajectory(){
     display_trajectory_.trajectory_start = plan_.start_state_;
     display_trajectory_.trajectory.push_back(plan_.trajectory_);
 
-    display_publisher_.publish(display_trajectory_);    
+    display_publisher_.publish(display_trajectory_);   
+    std::cout << "after publisher" << std::endl; 
 }
 
-void Schunk::add_object(moveit_msgs::AttachedCollisionObject object){
+geometry_msgs::Pose Schunk::create_pose(double x, double y, double z, double w){
+    geometry_msgs::Pose pose;
+    pose.orientation.w = w;
+    pose.orientation.x = 0;
+    pose.orientation.y = 0;
+    pose.orientation.z = 0;
+    pose.position.x = x;
+    pose.position.y = y;
+    pose.position.z = z;
+    return pose;
+}
+
+void Schunk::add_object_to_world(moveit_msgs::CollisionObject object, int index){
+    ROS_INFO("Adding object to world"); 
+    collision_objects.push_back(object);
+    ROS_INFO("Adding object to collision object vector");
+    kinematic_state_->update(); 
+    planning_scene_interface.addCollisionObjects(collision_objects);
+    ROS_INFO("Object successfully added"); 
+    sleep(2.0); 
+    return;
+    //moveit_planning_scene_.world.collision_objects.push_back(attached_objects[attached_objects.size()-1].object);
+    //moveit_planning_scene_.is_diff = true;
+    //planning_scene_diff_publisher.publish(moveit_planning_scene_);
+
+}
+
+
+
+moveit_msgs::CollisionObject Schunk::create_box(std::string id, double size, geometry_msgs::Pose pose){
+    moveit_msgs::CollisionObject collision_object;
+    collision_object.header.frame_id = "base_link";//group_->getPlanningFrame();
     
-    attached_objects.push_back(object);
-    moveit_planning_scene_.world.collision_objects.push_back(attached_objects[attached_objects.size()-1].object);
-    moveit_planning_scene_.is_diff = true;
-    planning_scene_diff_publisher.publish(moveit_planning_scene_);
+    for(unsigned int i = 0; i < id.size(); i++){
+        collision_object.id.push_back(id[i]);
+    }
+    
+    shape_msgs::SolidPrimitive primitive;
+    primitive.type = primitive.BOX;
+    primitive.dimensions.resize(size);
+    primitive.dimensions[0] = 0.1;
+    primitive.dimensions[1] = 0.1;
+    primitive.dimensions[2] = 0.1;
 
-}
-
-moveit_msgs::AttachedCollisionObject Schunk::create_box(double size, geometry_msgs::Pose pose){
+   
+    collision_object.primitives.push_back(primitive);
+    collision_object.primitive_poses.push_back(pose);
+    collision_object.operation = collision_object.ADD;
+    /*
     moveit_msgs::AttachedCollisionObject object;
     object.link_name = "base_link";
     object.object.header.frame_id = "base_link";
@@ -204,14 +267,21 @@ moveit_msgs::AttachedCollisionObject Schunk::create_box(double size, geometry_ms
     object.object.primitives.push_back(primitive);
     object.object.primitive_poses.push_back(pose);
     object.object.operation = object.object.ADD;
-
-    return object;
+*/
+    return collision_object;
 }
 
-void Schunk::remove_object(int index, std::string id){
+void Schunk::remove_object_from_world(int index){
+    std::vector<std::string> object_ids;
+    object_ids.push_back(collision_objects[index].id);    
+    planning_scene_interface.removeCollisionObjects(object_ids);
+    sleep(4.0);
+    return;
+    /*
     moveit_msgs::CollisionObject remove_object;
     remove_object.id = id; // NOTICE: bugs may persist - copying of id may just be shallow copy within local frame
-    remove_object.header.frame_id = "base_link";
+    //remove_object.header.frame_id = "base_link";
+    remove_object.header.frame_id = group_.getPlanningFrame();
     remove_object.operation = remove_object.REMOVE;
     
     remove_objects[index] = remove_object;
@@ -220,6 +290,50 @@ void Schunk::remove_object(int index, std::string id){
     moveit_planning_scene_.robot_state.attached_collision_objects.push_back(attached_objects[index]);
 
     planning_scene_diff_publisher.publish(moveit_planning_scene_);
+*/
+}
+
+void Schunk::add_object_to_robot(int index){
+    group_->attachObject(collision_objects[index].id);
+    sleep(4.0);
+}
+
+void Schunk::remove_object_from_robot(int index){
+    group_->detachObject(collision_objects[index].id);
+    sleep(4.0);
+}
+
+void Schunk::randomize_joint_values(){
+    kinematic_state_->setToRandomPositions(joint_model_group_);
+    set_eef();
+}
+
+void Schunk::print_joint_values(){
+    std::vector<double> joint_values;
+    kinematic_state_->copyJointGroupPositions(joint_model_group_, joint_values);
+    
+    for(std::size_t i = 0; i < joint_values.size(); i++){
+        ROS_INFO("Joint %s: %f", joint_names_[i].c_str(), joint_values[i]);
+    }
+    
 
 }
+
+void Schunk::reset_joint_values(){
+    std::vector<double> joint_values;
+    kinematic_state_->copyJointGroupPositions(joint_model_group_, joint_values);
+    
+    for(std::size_t i = 0; i < joint_values.size(); i++){
+        joint_values[i] = 0;
+    }
+    kinematic_state_->setJointGroupPositions(joint_model_group_, joint_values);
+    joint_values_.clear();
+    for(unsigned int i = 0; i < joint_values.size(); i++){
+        joint_values_.push_back(joint_values[i]);
+    }
+    set_eef();
+
+}
+
+
 
