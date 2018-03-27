@@ -45,7 +45,7 @@ class Schunk{
         void reset_joint_values();
         void reset_trajectory();
 
-        geometry_msgs::Pose create_pose(double x, double y, double z, double w); 
+        geometry_msgs::Pose create_pose(double pos_x, double pos_y, double pos_z, double orient_x, double orient_y, double orient_z, double orient_w); 
 
         moveit_msgs::CollisionObject create_box(std::string id, double size, geometry_msgs::Pose pose);
 

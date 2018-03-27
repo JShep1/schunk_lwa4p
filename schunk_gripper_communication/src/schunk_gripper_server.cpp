@@ -405,44 +405,65 @@ bool plan_motion(){
 */
 
 bool plan_motion(){
-    /*
-    //TODO generate random eef pose and plan for schunk
-    schunk.print_pose(schunk.eef_pose_, "schunk's before eef");
-    schunk.print_joint_values();
-    schunk.randomize_joint_values();
-    //std::cout << "eef #" << i << std::endl;
-    schunk.print_pose(schunk.eef_pose_, "schunk's after eef");
-    schunk.print_joint_values();
+    schunk->randomize_joint_values();
         
-    geometry_msgs::Pose ik_eef_pose = schunk.create_pose(schunk.eef_pose_.position.x,schunk.eef_pose_.position.y,schunk.eef_pose_.position.z,schunk.eef_pose_.orientation.w);
+    geometry_msgs::Pose eef_pose = 
+        schunk->create_pose(
+                schunk->eef_pose_.position.x,
+                schunk->eef_pose_.position.y,
+                schunk->eef_pose_.position.z,
+                schunk->eef_pose_.orientation.x,
+                schunk->eef_pose_.orientation.y,
+                schunk->eef_pose_.orientation.z,
+                schunk->eef_pose_.orientation.w
+                );
         
-    schunk.reset_joint_values();
-    if(schunk.plan_motion(ik_eef_pose)){
+    schunk->reset_joint_values();
+    
+    if(schunk->plan_motion(eef_pose)){
         std::cout << "Found motion plan" << std::endl;
+        return true;
         //schunk.execute_motion();
     }
     else{
         std::cout << "No found motion plan" <<std::endl;
+        return false;
     }
-    */
-    return true;
 }
 
 
 bool execute_motion(){
-    //group.move();
+    return schunk->execute_motion();
+}
+
+bool create_box(double x, double y, double z){
+    ROS_INFO_STREAM("x: " << x << " y: " << y << " z: " << z);
+
+    //TODO rename the box_name to make it unique
+    std::string box_name = "test";
+
+    geometry_msgs::Pose box_pose = schunk->create_pose(x,y,z,0,0,0,1);
+
+    moveit_msgs::CollisionObject box = schunk->create_box(box_name, 1, box_pose);
+
+    //TODO make the index unique
+    schunk->add_object_to_world(box, 0);
+
+
     return true;
 }
 
 bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
         schunk_gripper_communication::schunk_gripper::Response &res)
 {
-    res.motorvalue = req.motorvalue;
-    std::string function_1 = "set_motor";
-    std::string function_2 = "plan_motion";
-    std::string function_3 = "execute_motion";
-    std::string function_4 = "init_schunk";
-    if(!function_1.compare((std::string)req.function_name)){
+    std::vector<std::string> function_names;
+    function_names.push_back("set_motor");
+    function_names.push_back("plan_motion");
+    function_names.push_back("execute_motion");
+    function_names.push_back("create_box");
+    
+    if(!function_names[0].compare((std::string)req.function_name)){
+        res.motorvalue = req.motorvalue;
         ROS_INFO("Found function set_motor");
         if(set_motor(res.motorvalue)){
             ROS_INFO("Successfully set motor.");
@@ -451,7 +472,7 @@ bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
             ROS_ERROR("Could not set motor. Returning.");
             return false;
         }
-    }else if(!function_2.compare((std::string)req.function_name)){
+    }else if(!function_names[1].compare((std::string)req.function_name)){
         ROS_INFO("Found function plan_motion");
         if(plan_motion()){
             ROS_INFO("Successfully created motion plan.");
@@ -462,7 +483,8 @@ bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
         }
 
     } 
-    else if(!function_3.compare((std::string)req.function_name)){
+    
+    else if(!function_names[2].compare((std::string)req.function_name)){
         ROS_INFO("Found function execute_motion");
         if(execute_motion()){
             ROS_INFO("Successfully executed motion.");
@@ -473,14 +495,14 @@ bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
         }
 
     }
-    else if(!function_4.compare((std::string)req.function_name)){
-        ROS_INFO("Found function init_schunk");
-        //Schunk schunk;
-        if(init_schunk()){
-            ROS_INFO("Successfully executed motion.");
+    
+    else if(!function_names[3].compare((std::string)req.function_name)){
+        ROS_INFO("Found function create_box");
+        if(create_box(req.box_x, req.box_y, req.box_z)){
+            ROS_INFO("Successfully created box.");
             return true;
         }else{
-            ROS_ERROR("Could not execute motion. Returning.");
+            ROS_ERROR("Could not place box. Returning.");
             return false;
         }
 
@@ -499,13 +521,15 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "schunk_gripper_server");
     ros::NodeHandle n;
+    ros::AsyncSpinner spinner(1);
+    spinner.start();
     schunk.reset(new Schunk(&n));
     //Schunk schunk(&n);
     //(&schunk)->~Schunk();
     //new (&schunk) Schunk(&n); 
     
-    geometry_msgs::Pose eef_pose = schunk->create_pose(1,1,1,1);
-    schunk->print_pose(eef_pose, "eef from main");
+    //geometry_msgs::Pose eef_pose = schunk->create_pose(1,1,1,1,1,1,1);
+    //schunk->print_pose(eef_pose, "eef from main");
     //sleep(7.0);
     
 

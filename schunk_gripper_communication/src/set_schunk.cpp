@@ -144,6 +144,7 @@ trajectory_msgs::JointTrajectoryPointPtr Schunk::create_traj_point(std::vector<d
 }
 
 bool Schunk::plan_motion(geometry_msgs::Pose eef_pose){
+    ROS_INFO("0");
     if(!this->getIK(eef_pose)){
         ROS_INFO("Could not find IK solution!");
         got_plan = false;
@@ -151,14 +152,20 @@ bool Schunk::plan_motion(geometry_msgs::Pose eef_pose){
     }
 
     ROS_INFO("Found IK solution!");
+    ROS_INFO("1");
     
     kinematic_state_->copyJointGroupPositions(joint_model_group_, joint_values_);
+    ROS_INFO("2");
     for(std::size_t i = 0; i < joint_values_.size(); i++){
         ROS_INFO("Joint %s: %f", joint_names_[i].c_str(), joint_values_[i]);
     }
     
+    ROS_INFO("3");
+
     group_->setJointValueTarget(joint_values_);
+    ROS_INFO("4");
     bool success = group_->plan(plan_);
+    ROS_INFO("5");
 
     //display_trajectory();
     
@@ -183,6 +190,7 @@ bool Schunk::execute_motion(){
     group_->clearPoseTargets();
     set_eef();
     ROS_INFO("Motion successfully executed!");
+    //group_->getCurrentState
     return true;
 }
 
@@ -204,15 +212,15 @@ void Schunk::display_trajectory(){
     std::cout << "after publisher" << std::endl; 
 }
 
-geometry_msgs::Pose Schunk::create_pose(double x, double y, double z, double w){
+geometry_msgs::Pose Schunk::create_pose(double pos_x, double pos_y, double pos_z, double orient_x, double orient_y, double orient_z, double orient_w){
     geometry_msgs::Pose pose;
-    pose.orientation.w = w;
-    pose.orientation.x = 0;
-    pose.orientation.y = 0;
-    pose.orientation.z = 0;
-    pose.position.x = x;
-    pose.position.y = y;
-    pose.position.z = z;
+    pose.orientation.w = orient_w;
+    pose.orientation.x = orient_x;
+    pose.orientation.y = orient_y;
+    pose.orientation.z = orient_z;
+    pose.position.x = pos_x;
+    pose.position.y = pos_y;
+    pose.position.z = pos_z;
     return pose;
 }
 
@@ -220,8 +228,8 @@ void Schunk::add_object_to_world(moveit_msgs::CollisionObject object, int index)
     ROS_INFO("Adding object to world"); 
     collision_objects.push_back(object);
     ROS_INFO("Adding object to collision object vector");
-    kinematic_state_->update(); 
     planning_scene_interface.addCollisionObjects(collision_objects);
+    kinematic_state_->update(); 
     ROS_INFO("Object successfully added"); 
     sleep(2.0); 
     return;
@@ -243,7 +251,7 @@ moveit_msgs::CollisionObject Schunk::create_box(std::string id, double size, geo
     
     shape_msgs::SolidPrimitive primitive;
     primitive.type = primitive.BOX;
-    primitive.dimensions.resize(size);
+    primitive.dimensions.resize(size*3);
     primitive.dimensions[0] = 0.1;
     primitive.dimensions[1] = 0.1;
     primitive.dimensions[2] = 0.1;

@@ -1,4 +1,7 @@
 string function_name
 float64 motorvalue
+float64 box_x
+float64 box_y
+float64 box_z
 ---
 float64 motorvalue
