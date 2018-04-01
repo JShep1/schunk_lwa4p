@@ -3,5 +3,8 @@ float64 motorvalue
 float64 box_x
 float64 box_y
 float64 box_z
+float64 plan_x
+float64 plan_y
+float64 plan_z
 ---
 float64 motorvalue

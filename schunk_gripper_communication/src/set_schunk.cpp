@@ -171,13 +171,19 @@ bool Schunk::plan_motion(geometry_msgs::Pose eef_pose){
     
     sleep(5.0);
 
-    
+    if(got_plan){
+        return success;
+    }
 
     got_plan = success;
+    
     return success;
 }
 
 bool Schunk::execute_motion(){
+    if(got_plan){
+        
+    }
     if (!got_plan){
         ROS_INFO("Plan not ready! Cannot execute motion.");
         return false;

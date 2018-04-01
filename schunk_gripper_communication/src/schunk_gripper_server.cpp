@@ -404,22 +404,40 @@ bool plan_motion(){
 }
 */
 
-bool plan_motion(){
-    schunk->randomize_joint_values();
-        
-    geometry_msgs::Pose eef_pose = 
-        schunk->create_pose(
-                schunk->eef_pose_.position.x,
-                schunk->eef_pose_.position.y,
-                schunk->eef_pose_.position.z,
-                schunk->eef_pose_.orientation.x,
-                schunk->eef_pose_.orientation.y,
-                schunk->eef_pose_.orientation.z,
-                schunk->eef_pose_.orientation.w
-                );
-        
-    schunk->reset_joint_values();
+bool plan_motion(double x, double y, double z){
+    bool is_rand = false; 
+
+    if(x == -1500 && y == -1500 && z == -1500){
+        is_rand = true;
+    }
+
+    geometry_msgs::Pose eef_pose;
     
+    if(is_rand){
+        
+        schunk->print_pose(schunk->eef_pose_, "Before randomize");
+    
+        schunk->randomize_joint_values();
+        schunk->print_pose(schunk->eef_pose_, "After randomize");
+        eef_pose = 
+            schunk->create_pose(
+                    schunk->eef_pose_.position.x,
+                    schunk->eef_pose_.position.y,
+                    schunk->eef_pose_.position.z,
+                    schunk->eef_pose_.orientation.x,
+                    schunk->eef_pose_.orientation.y,
+                    schunk->eef_pose_.orientation.z,
+                    schunk->eef_pose_.orientation.w
+                    );
+        
+        schunk->reset_joint_values();
+
+    }else{
+        eef_pose = schunk->create_pose(x,y,z,0,0,0,1);
+        //z is orient about y or x
+        //w orient is rot about z
+    }
+
     if(schunk->plan_motion(eef_pose)){
         std::cout << "Found motion plan" << std::endl;
         return true;
@@ -474,7 +492,7 @@ bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
         }
     }else if(!function_names[1].compare((std::string)req.function_name)){
         ROS_INFO("Found function plan_motion");
-        if(plan_motion()){
+        if(plan_motion(req.plan_x, req.plan_y, req.plan_z)){
             ROS_INFO("Successfully created motion plan.");
             return true;
         }else{
