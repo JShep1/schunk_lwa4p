@@ -2,7 +2,7 @@
 #define SET_SCHUNK_
 
 #include <stdlib.h>
-#include <Python.h>
+//#include <Python.h>
 #include <moveit_msgs/DisplayTrajectory.h>
 #include "ros/ros.h"
 #include "std_msgs/String.h"
@@ -33,17 +33,19 @@ class Schunk{
  	    void print_pose(geometry_msgs::Pose pose, std::string info);
 	    bool getIK(geometry_msgs::Pose eef_pose); 
         bool plan_motion(geometry_msgs::Pose eef_pose);
+        bool plan_motion(std::vector<double> joint_angles);
         bool execute_motion();
         void display_trajectory();
         void jointStatesCallback(std::vector<double> joint_values);
-        void add_object_to_world(moveit_msgs::CollisionObject object, int index);
-        void remove_object_from_world(int index);
-        void add_object_to_robot(int index);
-        void remove_object_from_robot(int index);
+        void add_object_to_world(moveit_msgs::CollisionObject object);
+        void remove_object_from_world(std::string id);
+        void add_object_to_robot(std::string id);
+        void remove_object_from_robot(std::string id);
         void randomize_joint_values();
         void print_joint_values(); 
         void reset_joint_values();
         void reset_trajectory();
+        void set_planning_time(double time);
 
         geometry_msgs::Pose create_pose(double pos_x, double pos_y, double pos_z, double orient_x, double orient_y, double orient_z, double orient_w); 
 

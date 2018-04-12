@@ -6,5 +6,10 @@ float64 box_z
 float64 plan_x
 float64 plan_y
 float64 plan_z
+float64 plan_xx
+float64 plan_yy
+float64 plan_zz
+uint64 index
+string id
 ---
 float64 motorvalue

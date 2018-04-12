@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <Python.h>
+//#include <Python.h>
 #include <moveit_msgs/DisplayTrajectory.h>
 #include "ros/ros.h"
 #include "std_msgs/String.h"
@@ -36,6 +36,10 @@ Schunk::~Schunk(){
 void Schunk::set_eef(){
     const Eigen::Affine3d &eef_state = kinematic_state_->getGlobalLinkTransform("arm_6_link");
     tf::poseEigenToMsg(eef_state, eef_pose_);
+}
+
+void Schunk::set_planning_time(double time){
+    group_->setPlanningTime(time);
 }
 
 void Schunk::initialize(){
@@ -143,8 +147,25 @@ trajectory_msgs::JointTrajectoryPointPtr Schunk::create_traj_point(std::vector<d
     return traj_point;
 }
 
+bool Schunk::plan_motion(std::vector<double> joint_angles){
+    
+    group_->setJointValueTarget(joint_angles);
+    bool success = group_->plan(plan_);
+
+    sleep(5.0);
+
+    if(got_plan){
+        return success;
+    }
+
+    got_plan = success;
+    
+    return success;
+    
+}
+
 bool Schunk::plan_motion(geometry_msgs::Pose eef_pose){
-    ROS_INFO("0");
+    
     if(!this->getIK(eef_pose)){
         ROS_INFO("Could not find IK solution!");
         got_plan = false;
@@ -152,23 +173,16 @@ bool Schunk::plan_motion(geometry_msgs::Pose eef_pose){
     }
 
     ROS_INFO("Found IK solution!");
-    ROS_INFO("1");
     
     kinematic_state_->copyJointGroupPositions(joint_model_group_, joint_values_);
-    ROS_INFO("2");
     for(std::size_t i = 0; i < joint_values_.size(); i++){
         ROS_INFO("Joint %s: %f", joint_names_[i].c_str(), joint_values_[i]);
     }
     
-    ROS_INFO("3");
 
     group_->setJointValueTarget(joint_values_);
-    ROS_INFO("4");
     bool success = group_->plan(plan_);
-    ROS_INFO("5");
 
-    //display_trajectory();
-    
     sleep(5.0);
 
     if(got_plan){
@@ -230,8 +244,10 @@ geometry_msgs::Pose Schunk::create_pose(double pos_x, double pos_y, double pos_z
     return pose;
 }
 
-void Schunk::add_object_to_world(moveit_msgs::CollisionObject object, int index){
-    ROS_INFO("Adding object to world"); 
+void Schunk::add_object_to_world(moveit_msgs::CollisionObject object){
+    ROS_INFO("Adding object to world");
+    //TODO Priority 1: check to see if the objects id matches any of the 
+    //     ids in the collision_objects vector 
     collision_objects.push_back(object);
     ROS_INFO("Adding object to collision object vector");
     planning_scene_interface.addCollisionObjects(collision_objects);
@@ -285,9 +301,9 @@ moveit_msgs::CollisionObject Schunk::create_box(std::string id, double size, geo
     return collision_object;
 }
 
-void Schunk::remove_object_from_world(int index){
+void Schunk::remove_object_from_world(std::string id){
     std::vector<std::string> object_ids;
-    object_ids.push_back(collision_objects[index].id);    
+    object_ids.push_back(id);    
     planning_scene_interface.removeCollisionObjects(object_ids);
     sleep(4.0);
     return;
@@ -307,13 +323,13 @@ void Schunk::remove_object_from_world(int index){
 */
 }
 
-void Schunk::add_object_to_robot(int index){
-    group_->attachObject(collision_objects[index].id);
+void Schunk::add_object_to_robot(std::string id){
+    group_->attachObject(id);
     sleep(4.0);
 }
 
-void Schunk::remove_object_from_robot(int index){
-    group_->detachObject(collision_objects[index].id);
+void Schunk::remove_object_from_robot(std::string id){
+    group_->detachObject(id);
     sleep(4.0);
 }
 

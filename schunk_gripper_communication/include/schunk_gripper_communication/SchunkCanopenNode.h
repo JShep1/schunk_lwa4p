@@ -32,9 +32,9 @@
 #include "actionlib/server/action_server.h"
 #include "actionlib/server/server_goal_handle.h"
 #include "std_srvs/Trigger.h"
-#include "schunk_canopen_driver/HomeAll.h"
-#include "schunk_canopen_driver/HomeWithIDs.h"
-#include "schunk_canopen_driver/HomeWithJointNames.h"
+#include "schunk_gripper_communication/HomeAll.h"
+#include "schunk_gripper_communication/HomeWithIDs.h"
+#include "schunk_gripper_communication/HomeWithJointNames.h"
 
 
 #include "SchunkCanopenHardwareInterface.h"
@@ -85,8 +85,8 @@ private:
    * \note: This service call exists for canopen IDs (usually 3-8 for a lwa4p) and
    * as an interface using the joint names from the URDF.
    */
-  bool homeNodesCanIds(schunk_canopen_driver::HomeWithIDsRequest& req,
-                       schunk_canopen_driver::HomeWithIDsResponse& resp);
+  bool homeNodesCanIds(schunk_gripper_communication::HomeWithIDsRequest& req,
+                       schunk_gripper_communication::HomeWithIDsResponse& resp);
 
   /*!
    * \brief Perform a reset offset for a given list of nodes. You should call this
@@ -97,15 +97,15 @@ private:
    * \note: This service call exists for canopen IDs (usually 3-8 for a lwa4p) and
    * as an interface using the joint names from the URDF.
    */
-  bool homeNodesJointNames(schunk_canopen_driver::HomeWithJointNamesRequest& req,
-                           schunk_canopen_driver::HomeWithJointNamesResponse& resp);
+  bool homeNodesJointNames(schunk_gripper_communication::HomeWithJointNamesRequest& req,
+                           schunk_gripper_communication::HomeWithJointNamesResponse& resp);
 
   /*!
    * \brief Perform a reset offset for all nodes. You should call this
    * service, after driving the devices to their zero position manually.
    */
-  bool homeAllNodes(schunk_canopen_driver::HomeAllRequest& req,
-                    schunk_canopen_driver::HomeAllResponse& resp);
+  bool homeAllNodes(schunk_gripper_communication::HomeAllRequest& req,
+                    schunk_gripper_communication::HomeAllResponse& resp);
 
 
   /*!

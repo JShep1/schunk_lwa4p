@@ -650,11 +650,11 @@ bool SchunkCanopenNode::quickStopNodes(std_srvs::TriggerRequest& req, std_srvs::
   return true;
 }
 
-bool SchunkCanopenNode::homeAllNodes(schunk_canopen_driver::HomeAllRequest& req,
-                                     schunk_canopen_driver::HomeAllResponse& resp)
+bool SchunkCanopenNode::homeAllNodes(schunk_gripper_communication::HomeAllRequest& req,
+                                     schunk_gripper_communication::HomeAllResponse& resp)
 {
-  schunk_canopen_driver::HomeWithIDsRequest req_fwd;
-  schunk_canopen_driver::HomeWithIDsResponse resp_fwd;
+  schunk_gripper_communication::HomeWithIDsRequest req_fwd;
+  schunk_gripper_communication::HomeWithIDsResponse resp_fwd;
   req_fwd.node_ids = m_controller->getNodeList();
 
 
@@ -664,11 +664,11 @@ bool SchunkCanopenNode::homeAllNodes(schunk_canopen_driver::HomeAllRequest& req,
 }
 
 
-bool SchunkCanopenNode::homeNodesJointNames(schunk_canopen_driver::HomeWithJointNamesRequest& req,
-                                            schunk_canopen_driver::HomeWithJointNamesResponse& resp)
+bool SchunkCanopenNode::homeNodesJointNames(schunk_gripper_communication::HomeWithJointNamesRequest& req,
+                                            schunk_gripper_communication::HomeWithJointNamesResponse& resp)
 {
-  schunk_canopen_driver::HomeWithIDsRequest req_fwd;
-  schunk_canopen_driver::HomeWithIDsResponse resp_fwd;
+  schunk_gripper_communication::HomeWithIDsRequest req_fwd;
+  schunk_gripper_communication::HomeWithIDsResponse resp_fwd;
   for (std::vector<std::string>::iterator it = req.joint_names.begin();
        it != req.joint_names.end();
   ++it)
@@ -688,8 +688,8 @@ bool SchunkCanopenNode::homeNodesJointNames(schunk_canopen_driver::HomeWithJoint
 }
 
 
-bool SchunkCanopenNode::homeNodesCanIds(schunk_canopen_driver::HomeWithIDsRequest& req,
-                                        schunk_canopen_driver::HomeWithIDsResponse& resp)
+bool SchunkCanopenNode::homeNodesCanIds(schunk_gripper_communication::HomeWithIDsRequest& req,
+                                        schunk_gripper_communication::HomeWithIDsResponse& resp)
 {
   try
   {
