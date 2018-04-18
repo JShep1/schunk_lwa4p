@@ -8,12 +8,16 @@ with an imaging table and arm constructed in house at The George Washington Univ
 for a `Department of Computer Science <https://www.cs.seas.gwu.edu/>`_ Senior Design Project.
 
 .. class:: no-web
-..
-    .. 	image:: https://github.com/gw-cs-sd/sd-2017-BRIEF/blob/master/brief.png
+
+    .. 	image:: https://github.com/gw-cs-sd/sd-18-roblox-let-s-play-part-1/tree/master/demo_gifs/sim_1.gif
         :alt: BRIEF
         :width: 100%
         :align: center
-    ..
+    
+    .. 	image:: https://github.com/gw-cs-sd/sd-18-roblox-let-s-play-part-1/tree/master/demo_gifs/execute_1.gif
+        :alt: BRIEF
+        :width: 100%
+        :align: center
 
 .. class:: no-web no-pdf
 
@@ -107,6 +111,7 @@ Download Dependencies for Driver and Workspace
     $ sudo apt-get install libsdformat1 ros-indigo-gazebo-plugins ros-indigo-gazebo-ros
     $ sudo apt-get install ros-indigo-joystick-drivers 
     $ sudo apt-get install ros-indigo-trac-ik
+    $ sudo apt-get install ros-indigo-trac-ik-kinematics-plugin
     $ sudo apt-get install python-dev
     $ sudo apt-get install python3-dev
     $ rosdep install robot_state_publisher urdf xacro controller_manager geometry_msgs
@@ -214,19 +219,68 @@ The src directory contains all of the cpp files from which the CMakeLists create
 
 * schunk_gripper_server.cpp is the server portion of the code as it is so named.  This piece of code is ran when one runs the aforementioned schunk_test.launch file.  It constantly polls the client, asking for a function to run.
 
-* schunk_gripper_client.cpp is the client portion of the code and simply parses a function argument passed in by the calling user and asks the server to perform this function if it is a valid one.  Currently, the client can ask the server to create_box, plan_motion, and execute_motion. A client call can be run using
+* schunk_gripper_client.cpp is the client portion of the code and simply parses a function argument passed in by the calling user and asks the server to perform this function if it is a valid one.  Currently, the client can ask the server to (note the following arguments that must be provided for the call to work):
+
+        * create_box **double x** **double y** **double z** **double x_orient** **double y_orient** **double z_orient** **double w_orient** **double dimension_stretch_x** **double dimension_stretch_y** **double dimension_stretch_z** **1** **std::string box_id**
+        * remove_box **std::string box_id** 
+        * pick_box **std::string box_id**
+        * place_box **std::string vox_id**
+        * plan_motion /* (for random plan) \*/
+        * plan_motion **double eef_x** **double eef_y** **double eef_z**
+        * plan_motion **double joint_1** **double joint_2** **double joint_3** **double joint_4** **double joint_5** **double joint_6** 
+        * execute_motion
+        * test_1
+        * test_2
+
+* A client call can be run using
 
 .. code-block:: bash
 
     $ rosrun schunk_gripper_communication schunk_gripper_client *function-name-here*
 
-Note the use of rosrun instead of roslaunch, given there is no launch file for the client node since it is only one node that needs to be run.
+when the server is running.
 
-* set_schunk.cpp holds the functionality for the created Schunk Object.  The Schunk Object contains various basic functionalities:
+* Note the use of rosrun instead of roslaunch, given there is no launch file for the client node since it is only one node that needs to be run.
 
-- insert
-- descriptions
-- here
+* set_schunk.cpp holds the functionality for the created Schunk Object.  Look at the set_schunk.h file in the include/schunk/ directory of the schunk_gripper_communication project for supplied arguments.  The Schunk Object contains various basic functionalities:
+        
+        * getIK
+                * creates the inverse kinematics plan - the joint angles needs for a specified eef pose
+        * plan_motion
+                * creates the motion plan, if possible, for a specified eef pose.  Note, this function calls getIK
+        * execute_motion
+                * executes the motion plan in simulation if there is a motion plan available
+        * get_eef
+                * returns the end effector's pose - needs to be fixed
+        * get_joint_angles
+                * returns the joint angles of the arm - needs to be fixed
+        * display_trajectory
+                * displays the trajectory of the execute_motion call
+        * jointStatesCallback
+                * sets the joint angles of the robot arm
+        * add_object_to_world
+                * adds a desired collision object to the world
+        * remove_object_from_world
+                * removes a desired collision object from the world
+        * add_object_to_robot
+                * attaches the object to the robot arm, equivalent to a "pick"
+        * remove_object_from_robot
+                * detaches the object from the robot arm, equivalent to a "place"
+        * randomize_joint_values
+                * randomizes the joint angles of the schunk in simulation
+        * reset_joint_values
+                * resets the joint values back to home position
+        * reset_trajectory
+                * resets the stored trajectory plan
+        * set_planning_time
+                * sets the planning time of the motion planner
+        * print_transform
+                * prints the input transform object
+        * print_pose
+                * prints the input pose object
+        * print_joint_values
+                * prints the joint values of the robot arm
+
 
 CMakeLists.txt and package.xml
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

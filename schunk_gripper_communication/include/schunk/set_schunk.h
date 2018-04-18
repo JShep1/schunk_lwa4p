@@ -29,12 +29,14 @@ class Schunk{
      //   void move_to_after_pose();
      //   void get_eef_pose();
 
-	    void print_transform(tf::Transform trans, std::string info);
- 	    void print_pose(geometry_msgs::Pose pose, std::string info);
 	    bool getIK(geometry_msgs::Pose eef_pose); 
         bool plan_motion(geometry_msgs::Pose eef_pose);
         bool plan_motion(std::vector<double> joint_angles);
         bool execute_motion();
+	    geometry_msgs::Pose get_eef();
+        std::vector<double> get_joint_angles();
+        void print_transform(tf::Transform trans, std::string info);
+ 	    void print_pose(geometry_msgs::Pose pose, std::string info);
         void display_trajectory();
         void jointStatesCallback(std::vector<double> joint_values);
         void add_object_to_world(moveit_msgs::CollisionObject object);
@@ -49,7 +51,7 @@ class Schunk{
 
         geometry_msgs::Pose create_pose(double pos_x, double pos_y, double pos_z, double orient_x, double orient_y, double orient_z, double orient_w); 
 
-        moveit_msgs::CollisionObject create_box(std::string id, double size, geometry_msgs::Pose pose);
+        moveit_msgs::CollisionObject create_box(std::string id, double size, geometry_msgs::Pose pose, std::vector<double> dims);
 
         geometry_msgs::Pose before_eef_pose_;
         geometry_msgs::Pose eef_pose_;

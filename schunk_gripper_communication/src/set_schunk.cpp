@@ -38,6 +38,20 @@ void Schunk::set_eef(){
     tf::poseEigenToMsg(eef_state, eef_pose_);
 }
 
+geometry_msgs::Pose Schunk::get_eef(){
+    const Eigen::Affine3d &eef_state = kinematic_state_->getGlobalLinkTransform("arm_6_link");
+    geometry_msgs::Pose eef_pose;
+    tf::poseEigenToMsg(eef_state, eef_pose);
+    return eef_pose;
+}
+
+std::vector<double> Schunk::get_joint_angles(){
+    std::vector<double> joint_values;
+    kinematic_state_->copyJointGroupPositions(joint_model_group_, joint_values);
+    return joint_values;
+}
+
+
 void Schunk::set_planning_time(double time){
     group_->setPlanningTime(time);
 }
@@ -195,22 +209,25 @@ bool Schunk::plan_motion(geometry_msgs::Pose eef_pose){
 }
 
 bool Schunk::execute_motion(){
-    if(got_plan){
-        
-    }
+    
     if (!got_plan){
         ROS_INFO("Plan not ready! Cannot execute motion.");
         return false;
     }
-    
-    display_trajectory_.trajectory.clear(); // clear trajectory vector, not sure if this is needed or does anything - current attempt at moving to position 2 from a position 1 where position 1 is the pos moved to after home pos
+    std::vector<double> joint_values;
+    display_trajectory_.trajectory.clear(); // clear trajectory vector, not sure if this is needed or does anything
 
     group_->execute(plan_);
     got_plan = false;
     group_->clearPoseTargets();
+    kinematic_state_->copyJointGroupPositions(joint_model_group_, joint_values);
+    jointStatesCallback(joint_values);
+
     set_eef();
+    
     ROS_INFO("Motion successfully executed!");
     //group_->getCurrentState
+    sleep(5.0);
     return true;
 }
 
@@ -263,7 +280,7 @@ void Schunk::add_object_to_world(moveit_msgs::CollisionObject object){
 
 
 
-moveit_msgs::CollisionObject Schunk::create_box(std::string id, double size, geometry_msgs::Pose pose){
+moveit_msgs::CollisionObject Schunk::create_box(std::string id, double size, geometry_msgs::Pose pose, std::vector<double> dims){
     moveit_msgs::CollisionObject collision_object;
     collision_object.header.frame_id = "base_link";//group_->getPlanningFrame();
     
@@ -274,9 +291,9 @@ moveit_msgs::CollisionObject Schunk::create_box(std::string id, double size, geo
     shape_msgs::SolidPrimitive primitive;
     primitive.type = primitive.BOX;
     primitive.dimensions.resize(size*3);
-    primitive.dimensions[0] = 0.1;
-    primitive.dimensions[1] = 0.1;
-    primitive.dimensions[2] = 0.1;
+    primitive.dimensions[0] = dims[0];
+    primitive.dimensions[1] = dims[1];
+    primitive.dimensions[2] = dims[2];
 
    
     collision_object.primitives.push_back(primitive);

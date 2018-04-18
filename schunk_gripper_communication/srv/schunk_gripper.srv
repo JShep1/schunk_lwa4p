@@ -3,13 +3,22 @@ float64 motorvalue
 float64 box_x
 float64 box_y
 float64 box_z
+float64 box_size
 float64 plan_x
 float64 plan_y
 float64 plan_z
 float64 plan_xx
 float64 plan_yy
 float64 plan_zz
+float64 plan_ww
 uint64 index
 string id
 ---
 float64 motorvalue
+float64 eef_joint_1
+float64 eef_joint_2
+float64 eef_joint_3
+float64 eef_joint_4
+float64 eef_joint_5
+float64 eef_joint_6
+float64 eef_orient_w
