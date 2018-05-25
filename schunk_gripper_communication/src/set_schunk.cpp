@@ -17,10 +17,16 @@
 #include <moveit/collision_detection/collision_common.h>
 #include <Eigen/Geometry>
 #include <schunk/set_schunk.h>
+#include <sensor_msgs/JointState.h>
+#include <boost/filesystem.hpp>
+#include <icl_hardware_canopen/CanOpenController.h>
+#include <icl_hardware_canopen/SchunkPowerBallNode.h>
 
+using namespace icl_hardware::canopen_schunk;
 
 Schunk::Schunk(ros::NodeHandle* nodehandle):node_handle(*nodehandle)
 {
+    this->priv_nh = nodehandle;
     this->initialize();
 }
 
@@ -64,12 +70,29 @@ void Schunk::set_planning_time(double time){
 void Schunk::initialize(){
     ROS_INFO("instantiating Schunk arm");
 
+    priv_nh->getParam("chain_names", chain_names);
+
+    priv_nh->param<std::string>("can_device_name", can_device_name, "auto");
+
+    priv_nh->param<float>  ("ppm_profile_velocity", ppm_config.profile_velocity,         0.2);
+
+    priv_nh->param<float>  ("ppm_profile_acceleration",   ppm_config.profile_acceleration,     0.2);
+
+    priv_nh->param<bool>   ("ppm_use_relative_targets",   ppm_config.use_relative_targets,     false);
+
+    priv_nh->param<bool>   ("ppm_change_set_immediately", ppm_config.change_set_immediately,   true);
+
+    priv_nh->param<bool>   ("ppm_use_blending",           ppm_config.use_blending,             true);
+
     group_.reset(new moveit::planning_interface::MoveGroup("Arm"));
     group_->setPlanningTime(5);
 
 
     got_robot_state = false;
     got_plan = false;
+    have_joint_vals = false;
+    schunk_is_init = false;
+    is_motion_simulated = false;
 
     display_publisher_ = node_handle.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path",1,true);
     planning_scene_diff_publisher = node_handle.advertise<moveit_msgs::PlanningScene>("planning_scene",1);
@@ -88,6 +111,178 @@ void Schunk::initialize(){
 
     reset_joint_values();
 
+}
+
+bool Schunk::shutdown_schunk(){
+
+  schunk_is_init = false;
+
+  try
+  {
+    for (size_t i = 0; i < chain_handles.size(); ++i)
+    {
+      chain_handles[i]->disableNodes();
+    }
+  }
+  catch (const ProtocolException& e)
+  {
+    ROS_ERROR_STREAM ( "Error while disabling nodes: " << e.what());
+  }
+  return true;
+}
+
+bool Schunk::send_to_pos(std::vector<double> joint_angles){
+ ds402::eModeOfOperation mode = ds402::MOO_PROFILE_POSITION_MODE;
+
+for (size_t i = 0; i < chain_handles.size(); ++i)
+  {
+    try {
+      ROS_INFO_STREAM ("Setting up Profile Position mode for chain " << chain_handles[i]->getName());
+      chain_handles[i]->setupProfilePositionMode(ppm_config);
+      chain_handles[i]->enableNodes(mode);
+    }
+    catch (const ProtocolException& e)
+    {
+      ROS_ERROR_STREAM ("Caught ProtocolException while enabling nodes from chain " <<
+        chain_handles[i]->getName() << ". Nodes from this group won't be enabled.");
+      continue;
+    }
+    ROS_INFO_STREAM ("Enabled nodes from chain " << chain_handles[i]->getName());
+    std::vector<DS301Node::Ptr> nodes = chain_handles[i]->getNodes();
+    std::vector<float> targets (nodes.size(), 0.0);
+    targets[0] = (float)joint_angles[0];
+    targets[1] = (float)joint_angles[1];
+    targets[2] = (float)joint_angles[2];
+    targets[3] = (float)joint_angles[3];
+    targets[4] = (float)joint_angles[4];
+    targets[5] = (float)joint_angles[5];
+    chain_handles[i]->setTarget(targets);
+  }
+  my_controller->enablePPMotion();
+
+  std::vector<bool> foo;
+
+  while ( true )
+  {
+    size_t num_reached = 0;
+    try {
+      my_controller->syncAll();
+    }
+    catch (const std::exception& e)
+    {
+      ROS_ERROR_STREAM (e.what());
+      return false;
+    }
+    usleep(10000);
+
+    for (size_t i = 0; i < chain_handles.size(); ++i)
+    {
+      if (chain_handles[i]->isTargetReached(foo))
+      {
+        num_reached++;
+      }
+    }
+    if (num_reached == chain_handles.size())
+    {
+      break;
+    }
+  }
+
+  LOGGING_INFO (CanOpen, "All targets reached" << endl);
+  return true;
+}
+
+//initialize actual schunk arm
+bool Schunk::init_schunk()
+{
+// Create a canopen controller
+    ROS_INFO_STREAM("can device name: " << can_device_name);
+  ROS_INFO_STREAM("1");
+  try
+  {
+    my_controller = boost::make_shared<CanOpenController>(can_device_name);
+  }
+  catch (const DeviceException& e)
+  {
+    ROS_ERROR_STREAM ("Initializing CAN device failed. Reason: " << e.what());
+    ROS_INFO ("Shutting down now.");
+    return false;
+  }
+  // Load SCHUNK powerball specific error codes
+  char const* tmp = std::getenv("CANOPEN_RESOURCE_PATH");
+  ROS_INFO_STREAM("2");
+  if (tmp == NULL)
+  {
+    LOGGING_WARNING_C(
+        CanOpen,
+        CanOpenController,
+        "The environment variable 'CANOPEN_RESOURCE_PATH' could not be read. No Schunk specific error codes will be used." << endl);
+  }
+  else
+  {
+    std::string emcy_emergency_errors_filename = boost::filesystem::path(tmp / boost::filesystem::path("EMCY_schunk.ini")).string();
+    EMCY::addEmergencyErrorMap( emcy_emergency_errors_filename, "schunk_error_codes");
+  }
+
+  ROS_INFO_STREAM("3");
+
+  // Get chain configuration from parameter server
+  ROS_INFO_STREAM ("Can device identifier: " << can_device_name);
+  ROS_INFO_STREAM ("Found " << chain_names.size() << " chains");
+
+  // parse the robot configuration
+  for (size_t i = 0; i < chain_names.size(); ++i)
+  {
+    std::string name = "chain_" + chain_names[i];
+    my_controller->addGroup<DS402Group>(chain_names[i]);
+    chain_handles.push_back(my_controller->getGroup<DS402Group>(chain_names[i]));
+    std::vector<int> chain;
+    try
+    {
+      priv_nh->getParam(name, chain);
+    }
+    catch (ros::InvalidNameException e)
+    {
+      ROS_ERROR_STREAM("Parameter Error!");
+    }
+    if (chain.size() == 0)
+    {
+      ROS_ERROR_STREAM("Did not find device list for chain " << chain_names[i] << ". Make sure, that an entry " << name << " exists.");
+      continue;
+    }
+    ROS_INFO_STREAM ("Found chain with name " << name << " and " << chain.size() << " nodes");
+    chain_configurations[name] = chain;
+    for (size_t j = 0; j < chain.size(); ++j)
+    {
+      my_controller->addNode<SchunkPowerBallNode>(chain[j], chain_names[i]);
+
+      std::string joint_name = "";
+      std::string mapping_key = "~node_mapping_" + boost::lexical_cast<std::string>( chain[j]);
+      ros::param::get(mapping_key, joint_name);
+
+      joint_name_mapping[joint_name] =  static_cast<uint8_t>(chain[j]);
+      joint_msg.name.push_back(joint_name);
+    }
+  }
+
+  // initialize all nodes, by default this will start ProfilePosition mode, so we're good to enable nodes
+  try {
+    my_controller->initNodes();
+  }
+  catch (const ProtocolException& e)
+  {
+    ROS_ERROR_STREAM ("Caught ProtocolException while initializing devices: " << e.what());
+    ROS_INFO ("Going to shut down now");
+    exit (-1);
+  }
+  catch (const PDOException& e)
+  {
+    ROS_ERROR_STREAM ("Caught PDOException while initializing devices: " << e.what());
+    ROS_INFO ("Going to shut down now");
+    exit (-1);
+  }
+  schunk_is_init = true;
+  return true;
 }
 
 //print the input transform
@@ -180,6 +375,7 @@ bool Schunk::plan_motion(std::vector<double> joint_angles){
 
     got_plan = success;
 
+    have_joint_vals = success;
     return success;
 
 }
@@ -212,12 +408,60 @@ bool Schunk::plan_motion(geometry_msgs::Pose eef_pose){
     }
 
     got_plan = success;
-
+    have_joint_vals = success;
     return success;
 }
 
-//execute the motion, only works if a motion plan was previously calculated
 bool Schunk::execute_motion(){
+    if (!have_joint_vals){
+        ROS_INFO("No IK Solution provided.  Create motion plan.");
+        return false;
+    }
+    if (!is_motion_simulated){
+      ROS_INFO("Motion plan has not yet been simulated! Please simulate motion.");
+      return false;
+    }
+
+    if (!schunk_is_init){
+        ROS_INFO("Schunk robot is not initialized.  Please initialize Schunk before attempting to execute a motion plan.");
+        return false;
+    }
+
+    ROS_INFO("Joint Angles to execute: ");
+    std::vector<double> to_execute;
+    for(std::size_t i = 0; i < joint_values_.size(); i++){
+        ROS_INFO("Joint %s: %f", joint_names_[i].c_str(), joint_values_[i]);
+    }
+
+    double joint_val = joint_values_[0]-2.24;
+    if(joint_val < -2.95){
+      ROS_INFO_STREAM("before mod value: " << (joint_val));
+      double mod_val = std::fmod(2.95,joint_val);
+      to_execute.push_back(mod_val);
+      ROS_INFO_STREAM("after mod value: " << (mod_val));
+    }else if ((joint_values_[0]+2.24) > 2.95){
+      to_execute.push_back(std::fmod(2.95,(joint_values_[0]+2.24)));
+    }else{
+      to_execute.push_back(joint_values_[0]-2.24);//-2.24
+    }
+
+    ROS_INFO_STREAM("joint 1 value: " << to_execute[0]);
+
+    to_execute.push_back(joint_values_[1]+0.45);
+    to_execute.push_back(joint_values_[3]+0.49);
+    to_execute.push_back(joint_values_[2]+0.22);
+    to_execute.push_back(joint_values_[4]-0.10);
+    to_execute.push_back(joint_values_[5]);
+
+    send_to_pos(to_execute);
+
+    have_joint_vals = false;
+    is_motion_simulated = false;
+    return true;
+}
+
+//simulate the motion, only works if a motion plan was previously calculated
+bool Schunk::simulate_motion(){
 
     if (!got_plan){
         ROS_INFO("Plan not ready! Cannot execute motion.");
@@ -228,6 +472,7 @@ bool Schunk::execute_motion(){
 
     group_->execute(plan_);
     got_plan = false;
+    is_motion_simulated = true;
     group_->clearPoseTargets();
     kinematic_state_->copyJointGroupPositions(joint_model_group_, joint_values);
     jointStatesCallback(joint_values);
@@ -236,6 +481,7 @@ bool Schunk::execute_motion(){
 
     ROS_INFO("Motion successfully executed!");
     sleep(5.0);
+    is_motion_simulated = true;
     return true;
 }
 

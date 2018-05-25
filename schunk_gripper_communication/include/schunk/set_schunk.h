@@ -19,6 +19,11 @@
 #include <moveit/collision_detection/collision_common.h>
 #include <Eigen/Geometry>
 #include <sensor_msgs/JointState.h>
+#include <boost/filesystem.hpp>
+#include <icl_hardware_canopen/CanOpenController.h>
+#include <icl_hardware_canopen/SchunkPowerBallNode.h>
+
+using namespace icl_hardware::canopen_schunk;
 
 class Schunk{
   public:
@@ -26,7 +31,10 @@ class Schunk{
     bool getIK(geometry_msgs::Pose eef_pose);
     bool plan_motion(geometry_msgs::Pose eef_pose);
     bool plan_motion(std::vector<double> joint_angles);
+    bool simulate_motion();
     bool execute_motion();
+    bool shutdown_schunk();
+    bool send_to_pos(std::vector<double> joint_angles);
     geometry_msgs::Pose get_eef();
     std::vector<double> get_joint_angles();
     void print_transform(tf::Transform trans, std::string info);
@@ -42,6 +50,7 @@ class Schunk{
     void reset_joint_values();
     void reset_trajectory();
     void set_planning_time(double time);
+    bool init_schunk();
 
     geometry_msgs::Pose create_pose(double pos_x, double pos_y, double pos_z, double orient_x, double orient_y, double orient_z, double orient_w); 
 
@@ -69,10 +78,14 @@ class Schunk{
 
     ros::Subscriber joint_states_sub_;
     ros::NodeHandle node_handle;
+    ros::NodeHandle* priv_nh;
     ros::Publisher display_publisher_;
     ros::Publisher planning_scene_diff_publisher;
     bool got_robot_state;
     bool got_plan;
+    bool have_joint_vals;
+    bool schunk_is_init;
+    bool is_motion_simulated;
 
     robot_model_loader::RobotModelLoader robot_model_loader_;
     robot_model::RobotModelPtr robot_model_;
@@ -88,6 +101,18 @@ class Schunk{
     boost::scoped_ptr<moveit::planning_interface::MoveGroup> group_;
     moveit_msgs::DisplayTrajectory display_trajectory_;
     moveit::planning_interface::MoveGroup::Plan plan_;
+
+    CanOpenController::Ptr my_controller;
+    std::string can_device_name;
+    std::vector<std::string> chain_names;
+    std::map<std::string, std::vector<int> > chain_configurations;
+    std::vector<DS402Group::Ptr> chain_handles;
+    sensor_msgs::JointState joint_msg;
+    ds402::ProfilePositionModeConfiguration ppm_config;
+    std::map<std::string, uint8_t> joint_name_mapping;
+
+
+
 
 
 };

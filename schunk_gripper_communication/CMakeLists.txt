@@ -230,29 +230,44 @@ target_link_libraries(schunk_gripper_communication_move_home_node
 )
 
 
-add_executable(schunk_gripper_server 
+add_executable(schunk_gripper_server
     src/schunk_gripper_server.cpp
     #    src/schunk_test.cpp
     src/set_schunk.cpp
     )
 
-target_link_libraries(schunk_gripper_server 
-    ${catkin_LIBRARIES} 
+  add_dependencies(schunk_gripper_server
+    schunk_gripper_communication_gencpp
+    ${PROJECT_NAME}_generate_messages_cpp
+    )
+
+target_link_libraries(schunk_gripper_server
+    ${icl_hardware_LIBRARIES}
+    ${icl_hardware_canopen_LIBRARIES}
+    ${icl_core_LIBRARIES}
+    ${icl_comm_INCLUDE_DIRS}
+    ${catkin_LIBRARIES}
     ${PYTHON_LIBRARIES})
 
 
-add_dependencies(schunk_gripper_server 
-    schunk_gripper_communication_gencpp)
-add_executable(schunk_gripper_client 
+add_executable(schunk_gripper_client
     src/schunk_gripper_client.cpp
     # src/schunk_test.cpp
     src/set_schunk.cpp
     )
 
-target_link_libraries(schunk_gripper_client 
-    ${catkin_LIBRARIES} 
+add_dependencies(schunk_gripper_client
+    schunk_gripper_communication_gencpp
+    ${PROJECT_NAME}_generate_messages_cpp
+  )
+
+target_link_libraries(schunk_gripper_client
+    ${icl_hardware_LIBRARIES}
+    ${icl_hardware_canopen_LIBRARIES}
+    ${icl_core_LIBRARIES}
+    ${icl_comm_INCLUDE_DIRS}
+    ${catkin_LIBRARIES}
     ${PYTHON_LIBRARIES})
-add_dependencies(schunk_gripper_client schunk_gripper_communication_gencpp)
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
@@ -288,7 +303,7 @@ add_dependencies(schunk_gripper_client schunk_gripper_communication_gencpp)
 ## Install ##
 #############
 ## Mark executables and/or libraries for installation
- install(TARGETS schunk_gripper_communication_node schunk_gripper_communication_move_home_node
+ install(TARGETS schunk_gripper_communication_node schunk_gripper_communication_move_home_node schunk_gripper_server
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

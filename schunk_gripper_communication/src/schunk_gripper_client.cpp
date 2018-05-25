@@ -16,7 +16,7 @@ int main(int argc, char **argv)
     std::vector<std::string> function_names;
     function_names.push_back("set_motor");
     function_names.push_back("plan_motion");
-    function_names.push_back("execute_motion");
+    function_names.push_back("simulate_motion");
     function_names.push_back("create_box");
     function_names.push_back("remove_box");
     function_names.push_back("pick_box");
@@ -27,11 +27,14 @@ int main(int argc, char **argv)
     function_names.push_back("test_2");
     function_names.push_back("test_box");
     function_names.push_back("test_planning");
+    function_names.push_back("init_schunk");
+    function_names.push_back("shutdown_schunk");
+    function_names.push_back("execute_motion");
 
     bool is_eef_query = false, is_joints_query = false;
 
     std::string cmd_arg = argv[1];
-
+    std::cout << cmd_arg <<std::endl;
 
     if(!function_names[0].compare(cmd_arg)){
         //set motor function
@@ -122,7 +125,7 @@ int main(int argc, char **argv)
         }
     }
     else if(!function_names[2].compare(cmd_arg)){
-        //execute motion function
+        //simulate motion function
         srv.request.function_name = argv[1];
 
     }
@@ -277,10 +280,27 @@ int main(int argc, char **argv)
         }
 
     }
+    else if(!function_names[13].compare(cmd_arg)){
+        //init schunk function
+        srv.request.function_name = argv[1];
+
+    }
+
+    else if(!function_names[14].compare(cmd_arg)){
+        //shutdown schunk function
+        srv.request.function_name = argv[1];
+
+    }
+
+    else if(!function_names[15].compare(cmd_arg)){
+        //execute motion function
+        srv.request.function_name = argv[1];
+
+    }
 
     else{
         ROS_ERROR("Invalid function call.");
-        ROS_ERROR("Valid function calls are set_motor, plan_motion, execute_motion, create_box");
+        //ROS_ERROR("Valid function calls are set_motor, plan_motion, execute_motion, create_box");
         return 0;
     }
 

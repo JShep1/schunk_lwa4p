@@ -37,13 +37,11 @@ bool create_box(double x, double y, double z,
     double xx, double yy, double zz, double ww,
     double dim1, double dim2, double dim3,
     double size, std::string id);
+bool simulate_motion();
 bool execute_motion();
 bool plan_motion(double x, double y, double z, double xx, double yy, double zz, double ww);
 
 
-bool init_schunk(){
-  return true;
-}
 
 //generates random float
 double frand(double fmin, double fmax){
@@ -147,7 +145,7 @@ bool test_1(){
       return false;
     }
 
-    execute_motion();
+    simulate_motion();
 
     if (i == 1){
       pick_box("box1");
@@ -209,7 +207,7 @@ bool test_2(){
       return false;
     }
 
-    execute_motion();
+    simulate_motion();
 
     if (i == 2){
       pick_box("box1");
@@ -351,6 +349,10 @@ bool plan_motion(double x, double y, double z, double xx, double yy, double zz, 
 
 
 //execute the motion within simulation
+bool simulate_motion(){
+  return schunk->simulate_motion();
+}
+
 bool execute_motion(){
   return schunk->execute_motion();
 }
@@ -420,6 +422,16 @@ bool place_box(std::string id){
   return true;
 }
 
+bool init_schunk(){
+
+  return schunk->init_schunk();
+
+}
+
+bool shutdown_schunk(){
+  return schunk->shutdown_schunk();
+}
+
 //return the joint angles of the Schunk arm - does not currently function properly
 bool query_joints(schunk_gripper_communication::schunk_gripper::Response &res){
   std::vector<double> joint_angles = schunk->get_joint_angles();
@@ -455,7 +467,7 @@ bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
   std::vector<std::string> function_names;
   function_names.push_back("set_motor");
   function_names.push_back("plan_motion");
-  function_names.push_back("execute_motion");
+  function_names.push_back("simulate_motion");
   function_names.push_back("create_box");
   function_names.push_back("remove_box");
   function_names.push_back("pick_box");
@@ -466,6 +478,9 @@ bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
   function_names.push_back("test_2");
   function_names.push_back("test_box");
   function_names.push_back("test_planning");
+  function_names.push_back("init_schunk");
+  function_names.push_back("shutdown_schunk");
+  function_names.push_back("execute_motion");
 
   if(!function_names[0].compare((std::string)req.function_name)){
     res.motorvalue = req.motorvalue;
@@ -500,12 +515,12 @@ bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
   }
 
   else if(!function_names[2].compare((std::string)req.function_name)){
-    ROS_INFO("Found function execute_motion");
-    if(execute_motion()){
-      ROS_INFO("Successfully executed motion.");
+    ROS_INFO("Found function simulate_motion");
+    if(simulate_motion()){
+      ROS_INFO("Successfully simulated motion.");
       return true;
     }else{
-      ROS_ERROR("Could not execute motion. Returning.");
+      ROS_ERROR("Could not simulate motion. Returning.");
       return false;
     }
 
@@ -635,6 +650,48 @@ bool choose_function(schunk_gripper_communication::schunk_gripper::Request &req,
 
   }
 
+  else if(!function_names[13].compare((std::string)req.function_name)){
+    ROS_INFO("Found function init_schunk");
+
+
+    if(init_schunk()){
+      ROS_INFO("Successfully initialized schunk robot.");
+      return true;
+    }else{
+      ROS_ERROR("Could not initialize schunk. Returning.");
+      return false;
+    }
+
+  }
+
+  else if(!function_names[14].compare((std::string)req.function_name)){
+    ROS_INFO("Found function shutdown_schunk");
+
+
+    if(shutdown_schunk()){
+      ROS_INFO("Successfully shutdown schunk robot.");
+      return true;
+    }else{
+      ROS_ERROR("Could not shutdown schunk. Returning.");
+      return false;
+    }
+
+  }
+
+  else if(!function_names[15].compare((std::string)req.function_name)){
+    ROS_INFO("Found function execute_motion");
+
+
+    if(execute_motion()){
+      ROS_INFO("Successfully executed motion.");
+      return true;
+    }else{
+      ROS_ERROR("Could not execute motion. Returning.");
+      return false;
+    }
+
+  }
+
   else{
     ROS_ERROR("No such function: %s", req.function_name.c_str());
     return false;
@@ -649,9 +706,10 @@ int main(int argc, char **argv)
 {
   ros::init(argc, argv, "schunk_gripper_server");
   ros::NodeHandle n;
+  ros::NodeHandle priv_nh("~");
   ros::AsyncSpinner spinner(1);
   spinner.start();
-  schunk.reset(new Schunk(&n));
+  schunk.reset(new Schunk(&priv_nh));
 
   ros::ServiceServer service = n.advertiseService("choose_function", choose_function);
   ROS_INFO("Ready to run a function.");

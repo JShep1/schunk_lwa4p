@@ -13,13 +13,15 @@
   <arg name="frequency" default="30" />
   <arg name="pcan_device" default="/dev/pcanusbfd32" />
 
-  <node name="schunk_gripper_communication_node" pkg="schunk_gripper_communication" type="schunk_gripper_communication_move_home_node" output="screen" launch-prefix="$(arg launch_prefix)">
+  <include file="$(find schunk_gripper_communication)/launch/demo.launch"></include>
+
+  <node name="schunk_gripper_communication_node" pkg="schunk_gripper_communication" type="schunk_gripper_server" output="screen" launch-prefix="$(arg launch_prefix)">
     <!--   Set env variable for the error codes   -->
-    <env name="CANOPEN_RESOURCE_PATH" value="$(find schunk_gripper_communication)/etc/error_codes" />
+    <env name="CANOPEN_RESOURCE_PATH" value="$(find schunk_canopen_driver)/etc/error_codes" />
     <param name="frequency"           type="int"      value="$(arg frequency)" />
     <param name="can_device_name"          type="string"   value="$(arg pcan_device)"   />
-    <rosparam command="load" file="$(find schunk_gripper_communication)/config/example_config.yaml"/>
-    <rosparam command="load" file="$(find schunk_gripper_communication)/config/node_mapping.yaml"/>
+    <rosparam command="load" file="$(find schunk_canopen_driver)/config/example_config.yaml"/>
+    <rosparam command="load" file="$(find schunk_canopen_driver)/config/node_mapping.yaml"/>
 
   </node>
 </launch>
