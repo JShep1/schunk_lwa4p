@@ -21,73 +21,70 @@
   <xacro:macro name="schunk_lwa4p" params="parent name *origin">
 
 
-    
     <joint name="table_base_joint" type="fixed" >
       <xacro:insert_block name="origin" />
       <parent link="${parent}" />
       <child link="table_link" />
     </joint>
-    
 <!-- joint between base_link and arm_0_link -->
     <joint name="${name}_0_joint" type="fixed" >
       <xacro:insert_block name="origin" />
       <parent link="table_link" />
       <child link="${name}_0_link" />
     </joint>
-    
     <joint name="camera_base_joint" type="fixed" >
       <xacro:insert_block name="origin" />
       <parent link="${parent}" />
       <child link="camera_link" />
     </joint>
-    
+
     <link name="camera_link">
       <inertial>
-        <origin xyz="0 0 0" rpy="0 0 0" />
+        <origin xyz="0 0 -0.13" rpy="0 0 0" />
         <mass value="10"/>
         <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01" />
       </inertial>
 
        <visual>
-        <origin xyz="0 0 -0.01" rpy="1.57 0 0" />
+        <origin xyz="0 0 -0.13" rpy="1.57 0 0" />
         <geometry>
-          <mesh filename="package://schunk_gripper_communication/meshes/cylinder-notop.dae" scale="1.85 0.2 1.85"/>
+          <mesh filename="package://schunk_gripper_communication/meshes/cylinder-notop.dae" scale="1.25 0.2 1.25"/>
         </geometry>
         <material name="Schunk/Yellow" />
       </visual>
 
       <collision>
-        <origin xyz="0 0 -0.01" rpy="1.57 0 0" />
+        <origin xyz="0 0 -0.13" rpy="1.57 0 0" />
         <geometry>
-          <mesh filename="package://schunk_gripper_communication/meshes/cylinder-notop.dae" scale="1.85 0.2 1.85"/>
+          <mesh filename="package://schunk_gripper_communication/meshes/cylinder-notop.dae" scale="1.25 0.2 1.25"/>
         </geometry>
       </collision>
      </link>
-    
+
 
     <link name="table_link">
       <inertial>
-        <origin xyz="0 0 0" rpy="0 0 0" />
+        <origin xyz="0 0 -0.13" rpy="0 0 0" />
         <mass value="10"/>
         <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01" />
       </inertial>
 
        <visual>
-        <origin xyz="0 0 0" rpy="0 0 0" />
+        <origin xyz="0 0 -0.13" rpy="0 0 0" />
         <geometry>
-            <cylinder length="0.01" radius="0.9" />
+            <cylinder length="0.01" radius="0.61" />
         </geometry>
         <material name="Schunk/Yellow" />
       </visual>
 
       <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
+        <origin xyz="0 0 -0.13" rpy="0 0 0" />
         <geometry>
-            <cylinder length="0.01" radius="0.9" />
+            <cylinder length="0.01" radius="0.61" />
         </geometry>
       </collision>
      </link>
-     
+
      <link name="${name}_0_link">
       <inertial>
         <origin xyz="0 0 0" rpy="0 0 0" />
@@ -334,39 +331,40 @@
     <link name="${name}_tcp_link">
     </link>
     -->
-    
-    <joint name="gripper_joint" type="fixed" >
-        <origin xyz="0 0 0.27" rpy="0 0 0" />
+
+<joint name="gripper_joint" type="fixed" >
+        <origin xyz="0 0 0.29" rpy="0 0 0" />
         <parent link="${name}_6_link" />
       <child link="gripper_link" />
     </joint>
 
     <link name="gripper_link">
       <inertial>
-        <origin xyz="0 0 0.13" rpy="0 0 0" />
+        <origin xyz="0 0 0" rpy="0 0 0" />
         <mass value="0.5"/>
         <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01" />
       </inertial>
 
        <visual>
-        <origin xyz="0 0 -0.15" rpy="0 0 0" />
+        <origin xyz="0 0 -0.11" rpy="0 0 0" />
         <geometry>
-            <box size="0.1 0.1 0.10" />
+            <box size="0.1 0.1 0.227" />
         </geometry>
         <material name="Schunk/Yellow" />
       </visual>
 
       <collision>
-        <origin xyz="0 0 -0.15" rpy="0 0 0" />
+        <origin xyz="0 0 -0.11" rpy="0 0 0" />
         <geometry>
-            <box size="0.1 0.1 0.10" />
+            <box size="0.1 0.1 0.227" />
         </geometry>
       </collision>
-     </link>
-     
+    </link>
+
+
 <!-- joint between arm_6_link and tcp_link -->
     <joint name="${name}_tcp_joint" type="fixed">
-      <origin xyz="0 0 0.08" rpy="0 0 0" />
+      <origin xyz="0 0 0.0" rpy="0 0 0" />
       <parent link="gripper_link"/>
       <child link="${name}_tcp_link"/>
     </joint>

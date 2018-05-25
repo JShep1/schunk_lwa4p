@@ -3,6 +3,11 @@
 #include <cstdlib>
 #include <stdlib.h>
 
+
+//main client code
+//creates a vector of the possiblity functions to be
+//called, makes a service call if the passed in function
+//is deemed valid
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "schunk_gripper_client");
@@ -46,26 +51,27 @@ int main(int argc, char **argv)
             srv.request.function_name = argv[1];
             srv.request.plan_x = -1500;
             srv.request.plan_y = -1500;
-            srv.request.plan_z = -1500;            
-            srv.request.plan_xx = -1500;            
-            srv.request.plan_yy = -1500;            
-            srv.request.plan_zz = -1500;            
+            srv.request.plan_z = -1500;
+            srv.request.plan_xx = -1500;
+            srv.request.plan_yy = -1500;
+            srv.request.plan_zz = -1500;
         }else if(argc == 5){
-            //x, y, and z supplied so go there
+            //just XYZ for eef provided
             srv.request.function_name = argv[1];
             double x = atof(argv[2]);
             double y = atof(argv[3]);
             double z = atof(argv[4]);
-            srv.request.plan_xx = -1500;            
-            srv.request.plan_yy = -1500;            
-            srv.request.plan_zz = -1500;            
+            srv.request.plan_xx = -1500;
+            srv.request.plan_yy = -1500;
+            srv.request.plan_zz = -1500;
+            srv.request.plan_ww = -1500;
 
-            srv.request.plan_x = x; 
-            srv.request.plan_y = y; 
-            srv.request.plan_z = z; 
+            srv.request.plan_x = x;
+            srv.request.plan_y = y;
+            srv.request.plan_z = z;
 
         }else if(argc == 8){
-
+            //joint angles provided
             srv.request.function_name = argv[1];
             double x = atof(argv[2]);
             double y = atof(argv[3]);
@@ -74,13 +80,32 @@ int main(int argc, char **argv)
             double yy = atof(argv[6]);
             double zz = atof(argv[7]);
 
-            srv.request.plan_x = x; 
-            srv.request.plan_y = y; 
-            srv.request.plan_z = z; 
-            srv.request.plan_xx = xx; 
-            srv.request.plan_yy = yy; 
-            srv.request.plan_zz = zz; 
+            srv.request.plan_x = x;
+            srv.request.plan_y = y;
+            srv.request.plan_z = z;
+            srv.request.plan_xx = xx;
+            srv.request.plan_yy = yy;
+            srv.request.plan_zz = zz;
+            srv.request.plan_ww = -1500;
 
+        }else if(argc == 9){
+            //quat provided
+            srv.request.function_name = argv[1];
+            double x = atof(argv[2]);
+            double y = atof(argv[3]);
+            double z = atof(argv[4]);
+            double xx = atof(argv[5]);
+            double yy = atof(argv[6]);
+            double zz = atof(argv[7]);
+            double ww = atof(argv[8]);
+
+            srv.request.plan_x = x;
+            srv.request.plan_y = y;
+            srv.request.plan_z = z;
+            srv.request.plan_xx = xx;
+            srv.request.plan_yy = yy;
+            srv.request.plan_zz = zz;
+            srv.request.plan_ww = ww;
         }else{
             //Invalid number of args
             ROS_ERROR("Invalid plan_motion call");
@@ -90,6 +115,8 @@ int main(int argc, char **argv)
             ROS_ERROR("Usage: schunk_gripper_client plan_motion *x_val* *y_val* *z_val*");
             ROS_ERROR("For specified plan using joint angles:");
             ROS_ERROR("Usage: schunk_gripper_client plan_motion *joint_val_1* *val_2* *val_3* *val_4* *val_5* *val_6*");
+            ROS_ERROR("For specified plan using quaternions:");
+            ROS_ERROR("Usage: schunk_gripper_client plan_motion *x_val* *y_val* *z_val* *xx_val* *yy_val* *zz_val* *ww_val*");
             return 0;
 
         }
@@ -115,14 +142,14 @@ int main(int argc, char **argv)
             double dim_1 = atof(argv[9]);
             double dim_2 = atof(argv[10]);
             double dim_3 = atof(argv[11]);
-            
+
             double size = atof(argv[12]);
 
             std::string id = argv[13];
 
-            srv.request.box_x = box_x; 
-            srv.request.box_y = box_y; 
-            srv.request.box_z = box_z; 
+            srv.request.box_x = box_x;
+            srv.request.box_y = box_y;
+            srv.request.box_z = box_z;
 
             srv.request.plan_xx = box_xx;
             srv.request.plan_yy = box_yy;
@@ -204,19 +231,19 @@ int main(int argc, char **argv)
         }
 
     }
-    
+
     else if(!function_names[9].compare(cmd_arg)){
         //test 1 function
         srv.request.function_name = argv[1];
 
     }
-    
+
     else if(!function_names[10].compare(cmd_arg)){
         //test 2 function
         srv.request.function_name = argv[1];
 
     }
-    
+
     else if(!function_names[11].compare(cmd_arg)){
         //test box function
         srv.request.function_name = argv[1];
@@ -233,7 +260,7 @@ int main(int argc, char **argv)
         }
 
     }
-    
+
     else if(!function_names[12].compare(cmd_arg)){
         //test plan function
         srv.request.function_name = argv[1];
@@ -252,22 +279,18 @@ int main(int argc, char **argv)
     }
 
     else{
-        ROS_ERROR("Invalid function call.");    
-        ROS_ERROR("Valid function calls are set_motor, plan_motion, execute_motion, create_box");   
-        return 0; 
+        ROS_ERROR("Invalid function call.");
+        ROS_ERROR("Valid function calls are set_motor, plan_motion, execute_motion, create_box");
+        return 0;
     }
 
-    //setenv("PYTHONPATH",".",1);
     ros::NodeHandle n;
     ros::ServiceClient client = n.serviceClient<schunk_gripper_communication::schunk_gripper>("choose_function");
 
-
-    //ROS_INFO("input: %s %s %f",srv.request.pythonfile, srv.request.pythonfunction,(double)srv.request.motorvalue);
-
     if (client.call(srv)){
         ROS_INFO("Function %s executed successfully", srv.request.function_name.c_str());
+        //below functions receive data back from server
         if(is_eef_query){
-            //TODO print eef pos and orient
             ROS_INFO_STREAM("eef x pos: " << srv.response.eef_joint_1);
             ROS_INFO_STREAM("eef y pos: " << srv.response.eef_joint_2);
             ROS_INFO_STREAM("eef z pos: " << srv.response.eef_joint_3);
@@ -277,7 +300,6 @@ int main(int argc, char **argv)
             ROS_INFO_STREAM("eef w orient: " << srv.response.eef_orient_w);
         }
         else if(is_joints_query){
-            //TODO print joint angles
             ROS_INFO_STREAM("Joint 1: " << srv.response.eef_joint_1);
             ROS_INFO_STREAM("Joint 2: " << srv.response.eef_joint_2);
             ROS_INFO_STREAM("Joint 3: " << srv.response.eef_joint_3);
@@ -285,7 +307,7 @@ int main(int argc, char **argv)
             ROS_INFO_STREAM("Joint 5: " << srv.response.eef_joint_5);
             ROS_INFO_STREAM("Joint 6: " << srv.response.eef_joint_6);
 
-        }        
+        }
     }else{
         ROS_ERROR("Function %s failed to execute", srv.request.function_name.c_str());
     }
