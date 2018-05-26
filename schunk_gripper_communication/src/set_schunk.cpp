@@ -435,14 +435,9 @@ bool Schunk::execute_motion(){
 
     double joint_val = joint_values_[0]-2.24;
     if(joint_val < -2.95){
-      ROS_INFO_STREAM("before mod value: " << (joint_val));
-      double mod_val = std::fmod(2.95,joint_val);
-      to_execute.push_back(mod_val);
-      ROS_INFO_STREAM("after mod value: " << (mod_val));
-    }else if ((joint_values_[0]+2.24) > 2.95){
-      to_execute.push_back(std::fmod(2.95,(joint_values_[0]+2.24)));
+      to_execute.push_back(joint_val+2*M_PI);
     }else{
-      to_execute.push_back(joint_values_[0]-2.24);//-2.24
+      to_execute.push_back(joint_val);//-2.24
     }
 
     ROS_INFO_STREAM("joint 1 value: " << to_execute[0]);
