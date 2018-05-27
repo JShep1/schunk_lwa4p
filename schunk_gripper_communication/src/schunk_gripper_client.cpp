@@ -2,7 +2,7 @@
 #include "schunk_gripper_communication/schunk_gripper.h"
 #include <cstdlib>
 #include <stdlib.h>
-
+#include <Eigen/Geometry>
 
 //main client code
 //creates a vector of the possiblity functions to be
@@ -86,10 +86,18 @@ int main(int argc, char **argv)
             srv.request.plan_x = x;
             srv.request.plan_y = y;
             srv.request.plan_z = z;
-            srv.request.plan_xx = xx;
-            srv.request.plan_yy = yy;
-            srv.request.plan_zz = zz;
-            srv.request.plan_ww = -1500;
+            float roll = xx, pitch = yy, yaw = zz;
+            Eigen::Quaternionf q;
+            q = Eigen::AngleAxisf(roll, Eigen::Vector3f::UnitX())
+              * Eigen::AngleAxisf(pitch, Eigen::Vector3f::UnitY())
+              * Eigen::AngleAxisf(yaw, Eigen::Vector3f::UnitZ());
+            q.normalize();
+            std::cout << "Normalized Quaternion" << std::endl << q.coeffs() << std::endl;
+            srv.request.plan_xx = q.x();
+            srv.request.plan_yy = q.y();
+            srv.request.plan_zz = q.z();
+            srv.request.plan_ww = q.w(); //change back to -1500 for joint angle specification
+
 
         }else if(argc == 9){
             //quat provided

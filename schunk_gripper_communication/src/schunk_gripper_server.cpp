@@ -331,6 +331,15 @@ bool plan_motion(double x, double y, double z, double xx, double yy, double zz, 
     success = schunk->plan_motion(eef_pose);
 
   }else{
+    /*
+    float roll = 1.5707, pitch = 0, yaw = 0.707;
+    Quaternionf q;
+    q = AngleAxisf(roll, Vector3f::UnitX())
+      * AngleAxisf(pitch, Vector3f::UnitY())
+      * AngleAxisf(yaw, Vector3f::UnitZ());
+    std::cout << "Quaternion" << std::endl << q.coeffs() << std::endl;
+*/
+
     //quaternion provided
     ROS_INFO("EEF pose planning for quat initiated");
     eef_pose = schunk->create_pose(x,y,z,xx,yy,zz,ww);
@@ -717,4 +726,3 @@ int main(int argc, char **argv)
 
   return 0;
 }
-
