@@ -1,0 +1,4 @@
+<launch>
+<node pkg="schunk_gripper_communication" type="turtlesim_node" name="sim"/>
+
+</launch>
